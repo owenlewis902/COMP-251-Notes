@@ -1,6 +1,12 @@
 \contentsline {section}{\numberline {1}Overview of Graph Theory}{2}
-\contentsline {section}{\numberline {2}Divide \& Conquor}{3}
-\contentsline {section}{\numberline {3}Greedy Algorithms}{4}
-\contentsline {section}{\numberline {4}Dynamic Programming}{5}
-\contentsline {section}{\numberline {5}Network Flows}{6}
-\contentsline {section}{\numberline {6}Data Structures}{7}
+\contentsline {subsection}{\numberline {1.1}Definitions}{2}
+\contentsline {subsection}{\numberline {1.2}Some Theorems for Undirected Graphs}{2}
+\contentsline {subsection}{\numberline {1.3}``````Data Structures'''''' for Representing Graphs}{4}
+\contentsline {subsubsection}{\numberline {1.3.1}Adjacency Matrices}{4}
+\contentsline {subsubsection}{\numberline {1.3.2}Adjacency Lists}{4}
+\contentsline {subsubsection}{\numberline {1.3.3}Adjacency Matrices vs. Adjacency Lists}{5}
+\contentsline {section}{\numberline {2}Divide \& Conquor}{6}
+\contentsline {section}{\numberline {3}Greedy Algorithms}{7}
+\contentsline {section}{\numberline {4}Dynamic Programming}{8}
+\contentsline {section}{\numberline {5}Network Flows}{9}
+\contentsline {section}{\numberline {6}Data Structures}{10}
