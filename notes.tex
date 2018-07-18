@@ -43,6 +43,7 @@
 \newcommand{\exxii}{\textbf{Example 2:  }}
 \newcommand{\exxiii}{\textbf{Example 3:  }}
 \newcommand{\soln}{\textbf{Solution: }}
+\newcommand{\ds}{\displaystyle}
 
 \title{COMP 251: Algorithms \& Data Structures}
 \author{Owen Lewis}
@@ -135,9 +136,83 @@ Verifying whether an edge exists, however, is much faster in an adjacency matrix
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Divide \& Conquor}
+\section{Divide \& Conquer}
+A \ti{divide and conquer} algorithm ideally breaks up a problem of size $n$ into smaller sub-problems such that:
+\begin{itemize}
+	\item There are exactly $a$ sub-problems
+	\item Each sub-problem has a size of at most $\displaystyle \frac{1}{b}\x n$
+	\item Once solved, the solutions to the sub-problems must be combined in $O(n^d)$ time to produce a solution to the original problem
+\end{itemize}
+Therefore the time-complexity of a divide and conquer algorithm satisfies a recurrence relation given by
+\[T(n) = a\x T\Big(\frac{n}{b}\Big) + O(n^d)\]
+\subsubsection{The Master Theorem}
+\tb{Lemma 1:} $\displaystyle \sum_{k=0}^{\ell} \tau^k = \frac{1-\tau^{\ell + 1}}{1-\tau}$, for any $\tau \neq 1$.\\
+\proo
+\begin{align*}
+	(1-\tau)\sum_{k=0}^{\ell} \tau^k &= \sum_{k=0}^{\ell} \tau^k - \sum_{k=1}^{\ell+1} \tau^k\\
+		&= \tau^0 - \tau^{\ell + 1}\\
+		&= 1 - \tau^{\ell + 1}\\
+	\sum_{k=0}^{\ell} \tau^k &= \frac{1 - \tau^{\ell + 1}}{1- \tau}
+\end{align*}
+\qed\\\\
+\tb{Lemma 2:} $\displaystyle x^{\log_{b}y} = y^{\log_{b}x}$ for any base $b \in \R$.\\
+\proo From the power rule of logarithms we have
+\[\log_{b}x \x \log_{b}y = \log_{b}\big(y^{\log_{b}x}\big)\]
+similarily, we have
+\[\log_{b}x \x \log_{b}y = \log_{b}\big(x^{\log_{b}y}\big)\]
+therefore
+\[\log_{b}\big(x^{\log_{b}y}\big) = \log_{b}\big(y^{\log_{b}x}\big)\]
+thus
+\[x^{\log_{b}y} = y^{\log_{b}x}\]
+\qed\\\\
+\thm (The Master Theorem) If a recurrence relation is of the form $\displaystyle T(n) = a\x T\Big(\frac{n}{b}\Big) + O(n^d)$, for constants $a\ \gt\ 0$, $b\ \gt\ 1$, and $d \geq 0$, then
+\[
+T(n) =
+\begin{cases}
+	O(n^d) &\text{, if } a\ \lt\ b^d \text{ [Case I]}\\
+	O(n^d\x \log n) &\text{, if } a = b^d \text{ [Case II]}\\
+	O(n^{log_{b}a}) &\text{, if } a\ \gt\ b^d \text{ [Case III]}
+\end{cases}
+\]
+\proo By adding dummy numbers, we may assume that $n$ is a power of $b$, i.e. $n = b^{\ell}$, for some $\ell \in \N_{0}$. Then
+\[T(n) = n^d + a\Big(\frac{n}{b}\Big)^d + a^{2}\Big(\frac{n}{b^2}\Big)^d + \dots + a^{\ell}\Big(\frac{n}{b^{\ell}}\Big)^d\]
+simlifying, we get
+\[T(n) = n^d \bigg(1 + \frac{a}{b^d} + \Big(\frac{a}{b^d}\Big)^2 + \dots + \Big(\frac{a}{b^d}\Big)^{\ell}\bigg)\]
+we now have three cases:\\\\
+Case I: $\displaystyle \frac{a}{b^d}\ \lt\ 1$\\
+Set $\displaystyle \tau := \frac{a}{b^d}$ then we have
+\[T(n) = n^d \sum_{k=0}^{\ell} \tau^{k}\]
+applying lemma 1 we get
+\[T(n) = n^d\bigg(\frac{1 - \tau^{\ell + 1}}{1 - \tau}\bigg) \leq n^d\Big(\frac{1}{1-\tau}\Big)\]
+but $\ds \frac{1}{1-\tau}$ is a constant so $T(n) \leq n^d$ and thus
+\[T(n) = O(n^d)\]
+Case II: $\ds \frac{a}{b^d} = 1$\\
+Then we have that
+\[T(n) = n^d \big(1 + 1 + 1^2 + \dots + 1^{\ell}\big) = n^d\big(\ell + 1\big)\]
+but $n = b^{\ell} \imply \ell = \log_{b}n$, thus
+\[T(n) = O(n^d\x \log n)\]
+Case III: $\displaystyle \frac{a}{b^d}\ \gt\ 1$\\
+Set $\displaystyle \tau := \frac{a}{b^d}$ then we have
+\[T(n) = n^d \sum_{k=0}^{\ell} \tau^{k}\]
+applying lemma 1 we get
+\[T(n) = n^d\bigg(\frac{\tau^{\ell + 1}-1}{\tau - 1}\bigg) \leq n^d\bigg(\frac{\tau^{\ell+1}}{\tau-1}\bigg)\]
+but since $\tau -1$ is a constant we get
+\begin{align*}
+T(n) &= n^d O(\tau^{\ell + 1})\\
+	&= O(n^d\tau^{\ell + 1})\\
+	&= O(n^d\tau^{\ell})\\
+	&= O\bigg(\Big(\frac{a}{b^{d}}\Big)^{\ell}n^{d}\bigg)\\
+	&= O\bigg(\Big(\frac{n}{b^{\ell}}\Big)^da^{\ell}\bigg)
+\end{align*}
+but $n = b^{\ell}$ so
+\[T(n) = O(a^{\ell})\]
+and $\ell = \log_ba$ so
+\[T(n) = O(a^{\log_bn})\]
+and applying lemma 2 gives
+\[T(n) = O(n^{\log_ba})\]
+This completes the proof.
+\qed
 \newpage
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Greedy Algorithms}

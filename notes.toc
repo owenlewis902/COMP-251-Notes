@@ -5,8 +5,9 @@
 \contentsline {subsubsection}{\numberline {1.3.1}Adjacency Matrices}{4}
 \contentsline {subsubsection}{\numberline {1.3.2}Adjacency Lists}{4}
 \contentsline {subsubsection}{\numberline {1.3.3}Adjacency Matrices vs. Adjacency Lists}{5}
-\contentsline {section}{\numberline {2}Divide \& Conquor}{6}
-\contentsline {section}{\numberline {3}Greedy Algorithms}{7}
-\contentsline {section}{\numberline {4}Dynamic Programming}{8}
-\contentsline {section}{\numberline {5}Network Flows}{9}
-\contentsline {section}{\numberline {6}Data Structures}{10}
+\contentsline {section}{\numberline {2}Divide \& Conquer}{6}
+\contentsline {subsubsection}{\numberline {2.0.1}The Master Theorem}{6}
+\contentsline {section}{\numberline {3}Greedy Algorithms}{9}
+\contentsline {section}{\numberline {4}Dynamic Programming}{10}
+\contentsline {section}{\numberline {5}Network Flows}{11}
+\contentsline {section}{\numberline {6}Data Structures}{12}
