@@ -44,6 +44,16 @@
 \newcommand{\exxiii}{\textbf{Example 3:  }}
 \newcommand{\soln}{\textbf{Solution: }}
 \newcommand{\ds}{\displaystyle}
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+\newcommand{\bigfloor}[1]{\big\lfloor #1 \big\rfloor}
+\newcommand{\bigceil}[1]{\big\lceil #1 \big\rceil}
+\newcommand{\Bigfloor}[1]{\Big\lfloor #1 \Big\rfloor}
+\newcommand{\Bigceil}[1]{\Big\lceil #1 \Big\rceil}
+\newcommand{\biggfloor}[1]{\bigg\lfloor #1 \bigg\rfloor}
+\newcommand{\biggceil}[1]{\bigg\lceil #1 \bigg\rceil}
+\newcommand{\Biggfloor}[1]{\Bigg\lfloor #1 \Bigg\rfloor}
+\newcommand{\Biggceil}[1]{\Bigg\lceil #1 \Bigg\rceil}
 
 \title{COMP 251: Algorithms \& Data Structures}
 \author{Owen Lewis}
@@ -121,7 +131,7 @@ For a graph, an \ti{adjacency matrix} $M$ is a matrix suxh that
 0, (i, j) \notin E
 \end{cases}$
 \end{enumerate}
-Note that in an undirected graph the matric is symmetric around the diagonal because $(i, j) \sim (j, i)$. Of course this is not necessarily true of directed graphs.
+Note that in an undirected graph the matric is symmetric around the diagonal because $(i, j) \equiv (j, i)$. Of course this is not necessarily true of directed graphs.
 \subsubsection{Adjacency Lists}
 An \ti{adjacency list} of an undirected graph is such that for each vertex $v$ of $V$ we store a list of its neighbours. For a directed graph we have two lists: one in which we store the in-neighbours of $v$ and one in which we store the out-neighbours of $v$.
 \subsubsection{Adjacency Matrices vs. Adjacency Lists}
@@ -131,7 +141,7 @@ The main difference between the two is the amount of storage required to impleme
 	\item An adjacency list requires we store $\Theta(m)$ numbers
 \end{itemize}
 In any graph $m = O(n^2)$. This means that for a sparse graph adjacency lists are highly favourable in terms of space complexity.\\\\
-Verifying whether an edge exists, however, is much faster in an adjacency matrix -- when using the array representation of a matrix it takes $O(1)$ time, where verifying the existance of an edge takes $O(\log n)$ time for an ordered adjacency list (using binary search), and $O(n)$ time if the adjacency list is not ordered (using sequential search). 
+Verifying whether an edge exists, however, is much faster in an adjacency matrix -- when using the array representation of a matrix it takes $O(1)$ time, where verifying the existance of an edge takes $O(\log n)$ time for an ordered adjacency list (using binary search), and $O(n)$ time if the adjacency list is not ordered (using sequential search).
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -212,7 +222,117 @@ and applying lemma 2 gives
 \[T(n) = O(n^{\log_ba})\]
 This completes the proof.
 \qed
+\subsection{MergeSort}
+MergeSort is an algorithm to sort $n$ numbers into non-decreasing order.\\\\
+---------------------------------------------------------------------------------------------------------
+MergeSort($x_1, x_2, \dots, x_n$)\\
+	\hspace*{7mm} if $n=1$\\
+	\hspace*{14mm} return $x_1$\\
+	\hspace*{7mm} else\\
+	\hspace*{14mm} return Merge(MergeSort($x_1, \dots, x_{\floor{\frac{n}{2}}}$), MergeSort($x_{\floor{\frac{n}{2}}+1}, \dots, x_n$))\\
+---------------------------------------------------------------------------------------------------------\\
+Where the Merge function is a linear time algorithm combining two sorted lists (by comparing the first element in each list and moving the smaller element of the two into our new list.)\\\\
+\tb{MergeSort is correct!}
+\begin{itemize}
+	\item It calls itself on smaller instances until the division process terminates when it reaches a base case where each list has size 1
+	\item MergeSort works trivially on the base cases
+	\item This sort of strong induction-type proof works for just about all divide and conquer algorithms
+\end{itemize}
+\tb{MergeSort is efficient!}
+\begin{itemize}
+	\item The recurrence relation that we can construct to model the running time of MergeSort is given by
+	\[T(n) = 2\x T\Big(\frac{n}{2}\Big) + O(n)\]
+	as we break the problem into two sub-problems of size $\ds \frac{n}{2}$, plus a linear time sub-routine to combine the solutions (Merge.)
+	\item This recurrence relation is in the proper form to use the Master Theorem and indeed we're in its Case II.
+	\item By the master theorem the running time of MergeSort is $O(n\x \log n)$.
+	\item The running time can also be proved by unwinding the recurrence.
+\end{itemize}
+\subsection{Binary Search}
+BInary Search is an algorithm to search for whether a key $k$ exists in a given sorted list.\\\\
+---------------------------------------------------------------------------------------------------------
+BinarySearch($a_1, a_2, a_n ; k$)\\
+	\hspace*{7mm} while $n\ \gt\ 0$\\
+	\hspace*{14mm} if $\ds a_{\floor{\frac{n}{2}}} = k$\\
+	\hspace*{21mm} return true\\
+	\hspace*{14mm} if $\ds a_{\floor{\frac{n}{2}}}\ \gt\ k$\\
+	\hspace*{21mm} return BinarySearch($a_1, \dots, a_{\ceil{\frac{n}{2}}-1} ; k$)\\
+	\hspace*{14mm} if $\ds a_{\floor{\frac{n}{2}}}\ \lt\ k$\\
+	\hspace*{21mm} return BinarySearch($a_{\ceil{\frac{n}{2}}+1}, \dots, a_n ; k$)\\
+	\hspace*{7mm} return false\\
+---------------------------------------------------------------------------------------------------------\\
+\tb{Binary Search works!}
+\begin{itemize}
+	\item It works for the same strong induction argument as MergeSort
+\end{itemize}
+\tb{Binary Search is efficient!}
+\begin{itemize}
+	\item The recurrence relation that we can construct to model the running time of Binary Search is given by
+	\[T(n) = T\Big(\frac{n}{2}\Big) + O(1)\]
+	as we break the problem into one sub-problem of size $\ds \frac{n}{2}$.
+	\item This recurrence relation is case II of the master theorem.
+	\item By the master theorem the running time of MergeSort is $O(\log n)$.
+	\item Again, the running time can also be proved by unwinding the recurrence.
+\end{itemize}
+\subsection{Fast Multiplication}
+\subsection{Fast Matrix Multiplication}
+\subsection{The Selection Problem}
+Suppose we're given a list of number and we want to find the $k^{th}$ smallest number in that list. We can use the following divide and conquer algorithm:\\\\
+---------------------------------------------------------------------------------------------------------
+Select($\mathcal{S}, k$)\\
+	\hspace*{7mm} if $|\mathcal{S}|$ = 1\\
+	\hspace*{14mm} return $x_1$\\
+	\hspace*{7mm} else\\
+	\hspace*{14mm} set $\mathcal{S}_L := \{x_i \in \mathcal{S} : x_i\ \lt\ x_1\}$\\
+	\hspace*{14mm} set $\mathcal{S}_R := \{x_i \in \mathcal{S} : x_i \geq x_1\}$\\\\
+	\hspace*{14mm} if $|\mathcal{S}_L| = k-1$\\
+	\hspace*{21mm} return $x_1$\\
+	\hspace*{14mm} else if $|\mathcal{S}_L|\ \gt\ k-1$\\
+	\hspace*{21mm} return Select($\mathcal{S}_L , k$)\\
+	\hspace*{14mm} else if $|\mathcal{S}_L|\ \lt\  k-1$\\
+	\hspace*{21mm} return Select($\mathcal{S}_R , k-1-|\mathcal{S}_L|$)\\
+---------------------------------------------------------------------------------------------------------\\
+Well.. this actually sucks because it runs in $\Omega(n^2)$ time. Note that it would actually be faster to just sort the list and then pull the $k^{th}$ element (this can of course be done in $O(n\x \log n)$ time.) One idea that we can exploit to improve this is to use a random pivot rather than deterministically selecting $x_1$ as a pivot.\\\\
+We will define a \ti{good pivot} to be such neither $\mathcal{S}_L$, nor $\mathcal{S}_R$ contain more than $\ds \frac{3}{4}$ of $\mathcal{S}$, and a \ti{bad pivot} to be otherwise. Note that by this definition the probability that a pivot will be either good or bad (respectively) is 0.5.\\\\
+For randomized algorithms we're always interested in the \ti{expected runtime} of the algorithm rather than the worst case runtime. The recurrence relation, $\bar{T}(n)$, for the expected runtime for the randomized version of the selection is then given by
+\[\bar{T}(n) \leq \frac{1}{2}\x \bar{T}\Big(\frac{3n}{4}\Big) + \frac{1}{2}\x \bar{T}(n) + O(n)\]
+where the $\ds \frac{1}{2}\x \bar{T}\Big(\frac{3n}{4}\Big)$ term represents the recursive call given a good pivot, and the $\ds \frac{1}{2}\x \bar{T}(n)$ term represents the recursive call on a bad pivot. It's less than or equal to because we will only ever use one of those terms at once but not both. We can clean this recurrence up a bit to find the expected runtime.
+\begin{align*}
+	\bar{T}(n) &\leq \frac{1}{2}\x \bar{T}\Big(\frac{3n}{4}\Big) + \frac{1}{2}\x \bar{T}(n) + O(n)\\
+	\frac{1}{2}\x \bar{T}(n) &\leq \frac{1}{2}\x \bar{T}\Big(\frac{3n}{4}\Big) + O(n)\\
+	\bar{T}(n) &\leq \bar{T}\Big(\frac{3n}{4}\Big) + O(n)
+\end{align*}
+Applying the master theorem to that recurrence gives $\bar{T}(n) = O(n)$\\\\
+This is good but let's try to do better, i.e. let's see if we can find a deterministic linear time algorithm. It turns out we can but it requires a little trick called the \ti{median of medians}.\\\\
+It's best to illustrate this concept with an example. Suppose we have a list, $\mathcal{S} = \{x_1, x_2, \dots, x_n\}$, from which we want to find the median of medians. To do this we partition the list into $\ds \Bigceil{\frac{n}{5}}$ groups of cardinality 5. Denote each such group by $G_1, \dots, G_{\ceil{\frac{n}{5}}}$ Then we'll sort each group and let $z_i$ be the median of each group $G_i$. Let $m$ be the median of the set $\mathcal{Z} = \{z_1, \dots, z_{\ceil{\frac{n}{5}}}\}$. Predictably, we call $m$ the \ti{median of medians}. This is significant because $m$ will always be a good pivot. This is because there will always be at least $\ds \frac{3n}{10} - 1$ numbers in $\mathcal{S}$ less than $m$, and $\ds \frac{3n}{10} - 1$ numbers in $\mathcal{S}$ at least as large as $m$. Therefore $\ds |\mathcal{S}_R| \leq \frac{7n}{10}$, and $\ds |\mathcal{S}_L| \leq \frac{7n}{10}$.\\\\
+Now that we have a deterministic way to guarntee we have a good pivot, all that's left is to bake it into a selection algorithm. Luckily, our algorithm won't vary too much since all we have to do is add a few steps at the beginning.\\\\\\\\
+---------------------------------------------------------------------------------------------------------
+DetSelect($\mathcal{S}, k$)\\
+	\hspace*{7mm} if $|\mathcal{S}| = 1$\\
+	\hspace*{14mm} return $x_1$\\
+	\hspace*{7mm} else\\
+	\hspace*{14mm} partition $\mathcal{S}$ into $\ds \Bigceil{\frac{n}{5}}$ groups of 5\\
+	\hspace*{14mm} for $j$ in range $\ds \bigg(1, \Bigceil{\frac{n}{5}}\bigg)$\\
+	\hspace*{21mm} let $z_j$ be the median of the group $G_j$.\\
+	\hspace*{14mm} let $\mathcal{Z} = \{z_1, \dots, z_{\ceil{\frac{n}{5}}}\}$\\
+	\hspace*{14mm} set $m$ := DetSelect\bigg($\ds \mathcal{Z}, \Bigceil{\frac{n}{10}}$\bigg)\\\\
+	\hspace*{14mm} set $\mathcal{S}_L := \{x_i \in \mathcal{S} : x_i\ \lt\ m\}$\\
+	\hspace*{14mm} set $\mathcal{S}_R := \{x_i \in \mathcal{S} : x_i \geq m\}$\\\\
+	\hspace*{14mm} if $|\mathcal{S}_L| = k-1$\\
+	\hspace*{21mm} return $m$\\
+	\hspace*{14mm} if $|\mathcal{S}_L|\ \gt\ k-1$\\
+	\hspace*{21mm} return DetSelect($\mathcal{S}_L, k$)\\
+	\hspace*{14mm} if $|\mathcal{S}_L|\ \lt\ k-1$\\
+	\hspace*{21mm} return DetSelect($\mathcal{S}_R, k-1-|\mathcal{S}_L|$)\\
+---------------------------------------------------------------------------------------------------------\\
+The recursive formula for the running time of this algorithm is
+\[T(n) \leq T\bigg(\frac{7n}{10}\bigg) + T\bigg(\frac{n}{5}\bigg) + O(n)\]
+where the $\ds T\bigg(\frac{n}{5}\bigg)$ term is the time to find the median of medians, the $\ds T\bigg(\frac{7n}{10}\bigg)$ term is pivoting based on the median of medians. Unfortunately, this doesn't work with the master theorem and we can't simplify it down to a form that does (unlike with the randomized algorithm, we need both of the $T(\dots)$ terms.) Since it doesn't work with the master theorem, we need to use the recusion tree method. From the recursion tree method, $T(n) = O(n)$. So there it is.. a linear time deterministic algorithm to select the $k^{th}$ smallest element from a list!
 \newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Graph Algorithms}
+\newpage
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Greedy Algorithms}
