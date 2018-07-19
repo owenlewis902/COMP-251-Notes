@@ -274,7 +274,83 @@ BinarySearch($a_1, a_2, a_n ; k$)\\
 	\item Again, the running time can also be proved by unwinding the recurrence.
 \end{itemize}
 \subsection{Fast Multiplication}
+In COMP 250 we found an $O(n^2)$ algorithm to multiply 2 $n$-digit numbers (in any base). Let's try to do better using divide and conquer. Consider the example:\\\\
+Let \tb{x} := $x_nx_{n-1}\dots x_{\frac{n}{2}+1}x_{\frac{n}{2}}\dots x_2x_1$\\
+Let \tb{y} := $y_ny_{n-1}\dots y_{\frac{n}{2}+1}y_{\frac{n}{2}}\dots y_2y_1$\\\\
+Then \tb{x} = $10^{\frac{n}{2}}$\tb{x$_{L}$} + \tb{x$_R$}, where \tb{x$_L$} = $x_n\dots x_{\frac{n}{2}+1}$, and \tb{x$_R$} = $x_{\frac{n}{2}}\dots x_1$\\
+Similarily \tb{y} = $10^{\frac{n}{2}}$\tb{y$_{L}$} + \tb{y$_R$}, where \tb{y$_L$} = $y_n\dots y_{\frac{n}{2}+1}$, and \tb{y$_R$} = $y_{\frac{n}{2}}\dots y_1$\\\\
+Thus
+\begin{align*}
+	\text{\tb{x}}\x \text{\tb{y}} &= (10^{\frac{n}{2}}\text{\tb{x}}_L + \text{\tb{x}}_R)(10^{\frac{n}{2}}\text{\tb{y}}_L + \text{\tb{y}}_R)\\
+		&= 10^n\x \text{\tb{x}}_L \text{\tb{y}}_L + 10^{\frac{n}{2}}(\text{\tb{x}}_L\text{\tb{y}}_R + \text{\tb{x}}_R\text{\tb{y}}_L) + \text{\tb{x}}_R\text{\tb{y}}_R
+\end{align*}
+So we've found a divide and conquer algorithm to multiply two $n$-digit numbers. Here we're breaking the problem down into four sub-problems of size $\ds \frac{n}{2}$, with a few additions thrown in there (can be done in linear time). Therefore, the recurrence for this algorithm is given by
+\[T(n) = 4\x T\Big(\frac{n}{2}\Big) + O(n)\]
+then, by the master theorem, the running time of this algorithm is $O(n^2)$. Hmmm. This isn't better. Well thanks to our good friend Carl ``G-Money'' Gauss, all is not lost. Gauss was studying the product of complex numbers
+\[(a + bi)(c + di) = ac - bd + (bc+ad)i\]
+which seemingly involved 4 multiplications, when he noticed that actually we can do it with only 3. Note that
+\[(bc+ad) = (a+b)(c+d)\]
+Now we can use this exact same trick but we'll replace the $i$ with $10^{\frac{n}{2}}$. This gives
+\[(\text{\tb{x}}_L\text{\tb{y}}_R + \text{\tb{x}}_R\text{\tb{y}}_L) = (\text{\tb{x}}_R + \text{\tb{x}}_L)(\text{\tb{y}}_R + \text{\tb{y}}_L) - \tb{x}_R\tb{y}_R - \tb{x}_L\tb{y}_L\]
+So now we can break our problem into only 3 sub-problems! Our new recurrence is
+\[T(n) = 3\x T\Big(\frac{n}{2}\Big) + O(n)\]
+so finally, by the master theorem, $T(n) = O(n^{\log_2 3}) \approx O(n^{1.59})$
 \subsection{Fast Matrix Multiplication}
+Let's try to efficiently multiply two $n \times n$ matrices. Let
+\[X :=
+\begin{pmatrix}
+A & B\\
+C & D
+\end{pmatrix}
+\text{, and } Y :=
+\begin{pmatrix}
+E & F\\
+G & H
+\end{pmatrix}
+\]
+where $X$, and $Y$ are two $n \times n$ matrices and $A, B, \dots H$ are eight $\ds \frac{n}{2} \times \frac{n}{2}$ matrices. Then their product $Z$ is given by
+\[
+Z =
+\begin{pmatrix}
+AE + BG & AF + BH\\
+CE + DG & CF + DH
+\end{pmatrix}
+\]
+Therefore multiplying two $n \times n$ matrices involves eight products of $\ds \frac{n}{2} \times \frac{n}{2}$ matrices, and $n^2$ additions. Therefore the recurrence relation is given by
+\[T(n) = 8\x T\Big(\frac{n}{2}\Big) + O(n^2)\]
+By the master theorem, this then takes $O(n^3)$ time. That's ok but again, we can do better. To do better however, we need a little algebraic trick. To do this, we need to define 7 matrices, $S_1, \dots, S_7$ given by
+\begin{center}
+\begin{tabular}{c c}
+$S_1 = (B-D)\x(G+H)$ & $S_2 = (A+D)\x(E+H)$\\
+$S_3 = (A-C)\x(E+F)$ & $S_4 = (A+B)\x H$\\
+$S_5 = A\x (F-H)$ & $S_6 = D\x (G-E)$\\
+$S_7 = (C+D)\x E$
+\end{tabular}
+\end{center}
+then the product of $X$, and $Y$ is given by
+\[Z =
+\begin{pmatrix}
+S_1 + S_2 - S_4 + S_6 & S_4 + S_5\\
+S_6 + S_7 & S_2 - S_3 + S_5 - S_7
+\end{pmatrix}
+\]
+This means that we only need to do 7 multiplications! Therefore our new recurrence is
+\[T(n) = 7\x T\Big(\frac{n}{2}\Big) + O(n^2)\]
+and thus by the master theorem $T(n) = O(n^{\log_2 7}) \approx O(n^{2.81})$
+\subsection{Fast Exponentiation}
+Consider the following algorithm to quickly calculate $x^n$:\\\\
+---------------------------------------------------------------------------------------------------------
+FastExp($x, n$)
+	\hspace*{7mm} if $n=1$\\
+	\hspace*{14mm} return $x_1$\\
+	\hspace*{7mm} else if $n$ is even\\
+	\hspace*{14mm} return FastExp($x, \floor{\frac{n}{2}})^2$\\
+	\hspace*{7mm} else if $n$ is odd\\
+	\hspace*{14mm} return $x\x$FastExp($x, \floor{\frac{n}{2}})^2$\\
+---------------------------------------------------------------------------------------------------------\\
+Assuming that $n$ is a power of two, we get that recurrence is given by
+\[T(n) = T\Big(\frac{n}{2}\Big) + O(1)\]
+and thus by the master theorem this algorithm has time complexity of $O(\log n)$.
 \subsection{The Selection Problem}
 Suppose we're given a list of number and we want to find the $k^{th}$ smallest number in that list. We can use the following divide and conquer algorithm:\\\\
 ---------------------------------------------------------------------------------------------------------
@@ -304,17 +380,17 @@ where the $\ds \frac{1}{2}\x \bar{T}\Big(\frac{3n}{4}\Big)$ term represents the 
 Applying the master theorem to that recurrence gives $\bar{T}(n) = O(n)$\\\\
 This is good but let's try to do better, i.e. let's see if we can find a deterministic linear time algorithm. It turns out we can but it requires a little trick called the \ti{median of medians}.\\\\
 It's best to illustrate this concept with an example. Suppose we have a list, $\mathcal{S} = \{x_1, x_2, \dots, x_n\}$, from which we want to find the median of medians. To do this we partition the list into $\ds \Bigceil{\frac{n}{5}}$ groups of cardinality 5. Denote each such group by $G_1, \dots, G_{\ceil{\frac{n}{5}}}$ Then we'll sort each group and let $z_i$ be the median of each group $G_i$. Let $m$ be the median of the set $\mathcal{Z} = \{z_1, \dots, z_{\ceil{\frac{n}{5}}}\}$. Predictably, we call $m$ the \ti{median of medians}. This is significant because $m$ will always be a good pivot. This is because there will always be at least $\ds \frac{3n}{10} - 1$ numbers in $\mathcal{S}$ less than $m$, and $\ds \frac{3n}{10} - 1$ numbers in $\mathcal{S}$ at least as large as $m$. Therefore $\ds |\mathcal{S}_R| \leq \frac{7n}{10}$, and $\ds |\mathcal{S}_L| \leq \frac{7n}{10}$.\\\\
-Now that we have a deterministic way to guarntee we have a good pivot, all that's left is to bake it into a selection algorithm. Luckily, our algorithm won't vary too much since all we have to do is add a few steps at the beginning.\\\\\\\\
+Now that we have a deterministic way to guarntee we have a good pivot, all that's left is to bake it into a selection algorithm. Luckily, our algorithm won't vary too much since all we have to do is add a few steps at the beginning.\\\\\\
 ---------------------------------------------------------------------------------------------------------
 DetSelect($\mathcal{S}, k$)\\
 	\hspace*{7mm} if $|\mathcal{S}| = 1$\\
 	\hspace*{14mm} return $x_1$\\
 	\hspace*{7mm} else\\
-	\hspace*{14mm} partition $\mathcal{S}$ into $\ds \Bigceil{\frac{n}{5}}$ groups of 5\\
-	\hspace*{14mm} for $j$ in range $\ds \bigg(1, \Bigceil{\frac{n}{5}}\bigg)$\\
+	\hspace*{14mm} partition $\mathcal{S}$ into $\ceil{\frac{n}{5}}$ groups of 5\\
+	\hspace*{14mm} for $j$ in range $\big(1, \ceil{\frac{n}{5}}\big)$\\
 	\hspace*{21mm} let $z_j$ be the median of the group $G_j$.\\
 	\hspace*{14mm} let $\mathcal{Z} = \{z_1, \dots, z_{\ceil{\frac{n}{5}}}\}$\\
-	\hspace*{14mm} set $m$ := DetSelect\bigg($\ds \mathcal{Z}, \Bigceil{\frac{n}{10}}$\bigg)\\\\
+	\hspace*{14mm} set $m$ := DetSelect\big($\mathcal{Z}, \ceil{\frac{n}{10}}$\big)\\\\
 	\hspace*{14mm} set $\mathcal{S}_L := \{x_i \in \mathcal{S} : x_i\ \lt\ m\}$\\
 	\hspace*{14mm} set $\mathcal{S}_R := \{x_i \in \mathcal{S} : x_i \geq m\}$\\\\
 	\hspace*{14mm} if $|\mathcal{S}_L| = k-1$\\
@@ -327,6 +403,7 @@ DetSelect($\mathcal{S}, k$)\\
 The recursive formula for the running time of this algorithm is
 \[T(n) \leq T\bigg(\frac{7n}{10}\bigg) + T\bigg(\frac{n}{5}\bigg) + O(n)\]
 where the $\ds T\bigg(\frac{n}{5}\bigg)$ term is the time to find the median of medians, the $\ds T\bigg(\frac{7n}{10}\bigg)$ term is pivoting based on the median of medians. Unfortunately, this doesn't work with the master theorem and we can't simplify it down to a form that does (unlike with the randomized algorithm, we need both of the $T(\dots)$ terms.) Since it doesn't work with the master theorem, we need to use the recusion tree method. From the recursion tree method, $T(n) = O(n)$. So there it is.. a linear time deterministic algorithm to select the $k^{th}$ smallest element from a list!
+\subsection{The Closest Pair of Points in a Plane}
 \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
