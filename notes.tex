@@ -155,7 +155,7 @@ A \ti{divide and conquer} algorithm ideally breaks up a problem of size $n$ into
 \end{itemize}
 Therefore the time-complexity of a divide and conquer algorithm satisfies a recurrence relation given by
 \[T(n) = a\x T\Big(\frac{n}{b}\Big) + O(n^d)\]
-\subsubsection{The Master Theorem}
+\subsection{The Master Theorem}
 \tb{Lemma 1:} $\displaystyle \sum_{k=0}^{\ell} \tau^k = \frac{1-\tau^{\ell + 1}}{1-\tau}$, for any $\tau \neq 1$.\\
 \proo
 \begin{align*}
@@ -340,7 +340,7 @@ and thus by the master theorem $T(n) = O(n^{\log_2 7}) \approx O(n^{2.81})$
 \subsection{Fast Exponentiation}
 Consider the following algorithm to quickly calculate $x^n$:\\\\
 ---------------------------------------------------------------------------------------------------------
-FastExp($x, n$)
+FastExp($x, n$)\\
 	\hspace*{7mm} if $n=1$\\
 	\hspace*{14mm} return $x_1$\\
 	\hspace*{7mm} else if $n$ is even\\
