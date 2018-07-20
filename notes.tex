@@ -18,8 +18,6 @@
 \newcommand{\Q}{\mathbb{Q}}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\C}{\mathbb{C}}
-\newcommand{\bbP}{\mathbb{P}}
-\newcommand{\bbE}{\mathbb{E}}
 \newcommand{\Om}{\Omega}
 \newcommand{\om}{\omega}
 \newcommand{\la}{\lambda}
@@ -33,6 +31,7 @@
 \newcommand{\al}{\alpha}
 \newcommand{\sg}{\sigma}
 \newcommand{\be}{\beta}
+\newcommand{\de}{\delta}
 \newcommand{\prop}{\textbf{Proposition: }}
 \newcommand{\thm}{\textbf{Theorem: }}
 \newcommand{\lem}{\textbf{Lemma: }}
@@ -54,6 +53,8 @@
 \newcommand{\biggceil}[1]{\bigg\lceil #1 \bigg\rceil}
 \newcommand{\Biggfloor}[1]{\Bigg\lfloor #1 \Bigg\rfloor}
 \newcommand{\Biggceil}[1]{\Bigg\lceil #1 \Bigg\rceil}
+\newcommand{\mcal}[1]{\mathcal{#1}}
+\newcommand{\bb}[1]{\mathbb{#1}}
 
 \title{COMP 251: Algorithms \& Data Structures}
 \author{Owen Lewis}
@@ -404,6 +405,81 @@ The recursive formula for the running time of this algorithm is
 \[T(n) \leq T\bigg(\frac{7n}{10}\bigg) + T\bigg(\frac{n}{5}\bigg) + O(n)\]
 where the $\ds T\bigg(\frac{n}{5}\bigg)$ term is the time to find the median of medians, the $\ds T\bigg(\frac{7n}{10}\bigg)$ term is pivoting based on the median of medians. Unfortunately, this doesn't work with the master theorem and we can't simplify it down to a form that does (unlike with the randomized algorithm, we need both of the $T(\dots)$ terms.) Since it doesn't work with the master theorem, we need to use the recusion tree method. From the recursion tree method, $T(n) = O(n)$. So there it is.. a linear time deterministic algorithm to select the $k^{th}$ smallest element from a list!
 \subsection{The Closest Pair of Points in a Plane}
+Suppose we're given a set $\mathcal{P}$ of $n$ points in a 2D plane, $\mathcal{P} = \{p_1, p_2, \dots, p_n\}$ and want to find the closest 2. For each $i \leq i \leq n$, let $p_i = (x_i, y_i)$.\\\\
+The easiest (correct) solution to think of is an exhaustive search where we calculate every distance between any two points and return the smallest pair. There are $n \choose 2$ possible pairs of points, and calculating the distance between any two can be done in constant time, so this means the runtime is $O(n^2)$. This is okay, it's certainly polynomial-time efficient, but let's do it faster.\\\\
+First, perhaps it will be handy to consider the 1D case (the closest two pairs of points on a line.) Note that in this case, the closest pair of point must be adjacent in their $x$-ordering. Therefore, assuming the list is already sorted according to their $x$-ordering, all we need to do is calculate $n-1$ pairwise distances, which can be done in $O(n)$ time. Of course if the list is not sorted we have to do that first, so the closest pair can be found in $O(n\x \log n)$ time. If we try to mimic that idea in the 2D case we come up with the following algorithm:\\\\
+---------------------------------------------------------------------------------------------------------
+Pair2D($\mathcal{P}$)\\
+	\hspace*{7mm} sort the pairs by their $x$-coordinate\\
+	\hspace*{7mm} sort the pairs by their $y$-coordinate\\\\
+	\hspace*{7mm} find the closest pair of points with respect to their $x$-coordinates\\
+	\hspace*{7mm} find the closest pair of points with respect to their $y$-coordinates\\\\
+	\hspace*{7mm} return the pair from the above 2 with the smallest distance between them\\
+---------------------------------------------------------------------------------------------------------\\
+Sorting the lists takes $O(n\x \log n)$ time, and finding the closest points takes $O(n)$ time, so this algorithm take $O(n\x \log n)$ time. Does it work though? Nope. Consider this example:\\
+\begin{center}
+\includegraphics[scale=0.3]{cpopce}
+\end{center}
+It's clear here that the two green points are the closest together, but the algorithm would have returned either the pair of red points or the pair of blue points.\\\\
+Let's try to come up with a divide and conquer algorithm to solve this problem. We can start by partitioning $\mathcal{P}$ into two sets, $\mathcal{P}_L$, and $\mathcal{P}_R$, of cardinality $\frac{n}{2}$. This gives us three possible outcomes:
+\begin{enumerate}
+	\item The closest pair of points is in $\mathcal{P}_L$
+	\item The closest pair of points is in $\mathcal{P}_R$
+	\item The closest pair of points has one point in $\mathcal{P}_L$, and the other point in $\mathcal{P}_R$
+\end{enumerate}
+To summarize this idea so far, we have the algorithm\\\\
+---------------------------------------------------------------------------------------------------------
+DCPair2D($\mathcal{P}$)\\
+	\hspace*{7mm} find the point $q$ with the median $x$-coordinate\\
+	\hspace*{7mm} partition $\mcal{P}$ into $\mcal{P}_L$, and $\mcal{P}_R$\\\\
+	\hspace*{7mm} find the closest pair of points in $\mcal{P}_L$\\
+	\hspace*{7mm} find the closest pair of points in $\mcal{P}_R$\\
+	\hspace*{7mm} find the closest pair of points with one point in $\mcal{P}_L$ and the other in $\mcal{P}_R$\\\\
+	\hspace*{7mm} return the pair from the above 3 with the smallest distance between them\\
+---------------------------------------------------------------------------------------------------------\\
+The recursive formula for this algorithm is given by
+\[T(n) = 2\x T\Big(\frac{n}{2}\Big) + O(n^2)\]
+The $O(n^2)$ term comes from the work needed to compare all $\frac{n}{2}$ points in $\mcal{P}_L$ with all $\frac{n}{2}$ points in $\mcal{P}_R$. $\big(\frac{n}{2} \times \frac{n}{2} = \frac{n^2}{4}$ comparisons.\big) Therefore, by the master theorem, the running time is $O(n^2)$.\\\\
+This isn't any better than exhaustive search because there's a bottleneck step where we compare the points in $\mcal{P}_L$ with those in $\mcal{P}_R$. Indeed we're pretty much just doing exhaustive search but on only $\frac{n}{2}$ elements. With this in mind, let's try to slim this step down. Note that since we've solved both the left and right sub-problems, there's a minimum pairwise distance $\de$, given by
+\[\de = \min(\de_L, \de_R)\]
+for which the distance between the closest two points will not exceed, even if the two points are not in the same partition. Therefore, when looking for pairs of points with one point in each partition, we only need to look for points within $\de$ of the dividing line! From now on we will denote the set of points within $\de$ of the dividing line by $\mcal{P}_M$. This trick does work, but not trivially, so it has to be proved.\\\\
+\lem Let $p_i \in \mcal{P}_L$, and let $p_j \in \mcal{P}_R$. If $d(p_i, p_j) \leq \de$ then $\{p_i, p_j\} \subseteq \mcal{P}_M$.\\\\
+\proo WLOG assume that $p_i \notin \mcal{P}_M$. Then $d(p_i, p_j)\ \gt\ \de$. Similarily, if $p_j \notin \mcal{R}_M$. Then $d(p_i, p_j)\ \gt\ \de$. Thus if the pair of points is not within one of the two original sub-problems, it must be contained within $\mcal{P}_M$.
+\qed\\\\
+Let's implement this trick in the last algorithm we wrote up.\\\\
+---------------------------------------------------------------------------------------------------------
+DCPair2D($\mathcal{P}$)\\
+	\hspace*{7mm} find the point $q$ with the median $x$-coordinate\\
+	\hspace*{7mm} partition $\mcal{P}$ into $\mcal{P}_L$, and $\mcal{P}_R$\\\\
+	\hspace*{7mm} find the closest pair of points in $\mcal{P}_L$\\
+	\hspace*{7mm} find the closest pair of points in $\mcal{P}_R$\\
+	\hspace*{7mm} find the closest pair of points in $\mcal{P}_M$\\\\
+	\hspace*{7mm} return the pair from the above 3 with the smallest distance between them\\
+---------------------------------------------------------------------------------------------------------\\
+There's still a problem. $\mcal{P}_M$ can possibly contain all (or most) of the points! This means that our algorithm can $still$ take $\Omega(n^2)$ time to measure the distances between the points in $\mcal{P}_L \cap \mcal{P}_M$, and the points in $\mcal{P}_R \cap \mcal{P}_M$. Once again, however, this was fortunately not all for nothing. Since $\mcal{P}_M$ covers only a narrow band of the $x$-axis, we'll consider the area of the plane within $\de$ of the dividing line (i.e. the area pf $\mcal{P}_M$.) Suppose we divide this area into small squares of size $\frac{\de}{2}$ then we have the following lemma:\\\\
+\lem No two points from $\mcal{P}$ will lie within the same square of width $\frac{\de}{2}$.\\\\
+\proo WLOG take two points in a square in $\mcal{P}_L$. Then their pairwise distance $d$ is
+\[d \leq \sqrt{\Big(\frac{\de}{2}\Big)^2 + \Big(\frac{\de}{2}\Big)^2} = \frac{\de}{\sqrt{2}}\ \lt\ \de\]
+which is a contradiction as $\de$ is the smalles distance between two points.
+\qed\\\\
+\thm Let $p_i \in \mcal{P}_L$, and let $p_j \in \mcal{P}_R$. If $d(p_i, p_j) \leq \de$ then $p_i$, and $p_j$ have at most 10 points between them in $\mcal{P}_M$ with respect to their $y$-ordering.\\\\
+\proo WLOG suppose that $p_i$ is below $p_j$ in the $y$-order. Then $p_j$ is in the same row of squares as $p_i$, or it is somewhere in the next two higher rows, or else they won't be within $\de$ of eachother (a contradiction). Therefore we are working in a rectangle that is at most three rows of squares high and four columns of squares wide. By the previous lemma we can have at most one point in any square and therefore in our $4 \times 3$ rectangle there can be at most 12 points. Thus, by choosing the the points on either extreme of the $y$-ordering of our rectangle, there can be at most 10 points between.
+\qed\\\\
+This result implies that the idea underlying the algorithm from the 1D case can be applied after all! We just have to tweak it slightly so as to look for points that are 11 apart rather than just adjacent, i.e. we'll have to calculate at most $11n$ pairwise distances rather than at most $n-1$. Thus we either find a pair of points in $\mcal{P}_M$ closer than $\de$ or we don't, but if we don't then we can conclude that no such pair of points exists, and we can do so in $O(n)$ time!\\\\
+Let's update our algorithm to reflect this.\\\\
+---------------------------------------------------------------------------------------------------------
+DCPair2D($\mathcal{P}$)\\
+	\hspace*{7mm} find the point $q$ with the median $x$-coordinate\\
+	\hspace*{7mm} partition $\mcal{P}$ into $\mcal{P}_L$, and $\mcal{P}_R$\\\\
+	\hspace*{7mm} find the closest pair of points in $\mcal{P}_L$\\
+	\hspace*{7mm} find the closest pair of points in $\mcal{P}_R$\\
+	\hspace*{7mm} find the closest pair of points in $\mcal{P}_M$ using the (updated) 1D algorithm\\\\
+	\hspace*{7mm} return the pair from the above 3 with the smallest distance between them\\
+---------------------------------------------------------------------------------------------------------\\
+Now that we've gotten the bottleneck step down to $O(n)$, the new recurrence relation for this algorithm is
+\[T(n) = 2\x T\Big(\frac{n}{2}\Big) + O(n)\]
+where the $O(n)$ term comes from finding the median with respect to the $x$-coordinates (using algorithm from previous lecture), partitioning $\mcal{P}$, finding $\mcal{P}_M$ and applying the 1D algorithm. Thus, by the master theorem, the time complexity of this algorithm is $O(n\x \log n)$. (If you think about it, the new most expensive step is just sorting the points in $\mcal{P}_M$ with respect to the $y$-coordinates! If you don't think that's hella cool then you have no soul.)\\\\
+Like most divide and conquer algorithms, this one is correct and the proof follows immediately from strong induction, where the proof that the base cases are correct follows from the proofs of the above various lemmas and theorems.
 \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

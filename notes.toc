@@ -14,8 +14,8 @@
 \contentsline {subsection}{\numberline {2.6}Fast Exponentiation}{12}
 \contentsline {subsection}{\numberline {2.7}The Selection Problem}{12}
 \contentsline {subsection}{\numberline {2.8}The Closest Pair of Points in a Plane}{14}
-\contentsline {section}{\numberline {3}Graph Algorithms}{15}
-\contentsline {section}{\numberline {4}Greedy Algorithms}{16}
-\contentsline {section}{\numberline {5}Dynamic Programming}{17}
-\contentsline {section}{\numberline {6}Network Flows}{18}
-\contentsline {section}{\numberline {7}Data Structures}{19}
+\contentsline {section}{\numberline {3}Graph Algorithms}{19}
+\contentsline {section}{\numberline {4}Greedy Algorithms}{20}
+\contentsline {section}{\numberline {5}Dynamic Programming}{21}
+\contentsline {section}{\numberline {6}Network Flows}{22}
+\contentsline {section}{\numberline {7}Data Structures}{23}
