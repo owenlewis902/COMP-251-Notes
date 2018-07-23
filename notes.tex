@@ -484,26 +484,138 @@ Like most divide and conquer algorithms, this one is correct and the proof follo
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Graph Algorithms}
+\subsection{The Generic Search Algorithm}
+Suppose we want to search a graph to determine whether there exists a path between a root node $r$ and some other node in the graph. Then we get the following algorithm:\\\\
+---------------------------------------------------------------------------------------------------------
+Search($r$)\\
+	\hspace*{7mm} put $r$ into a bag\\
+	\hspace*{14mm} while the bag is not empty\\
+	\hspace*{21mm} remove a node $v$ from the bag\\
+	\hspace*{21mm} if $v$ is unmarked\\
+	\hspace*{28mm} mark $v$\\
+	\hspace*{28mm} for each arc $(v, w)$\\
+	\hspace*{35mm} put $w$ into the bag\\
+---------------------------------------------------------------------------------------------------------\\
+Where we say a new vertex (and therefore a path to that new vertex) is discovered when it's marked. We can write this algorithm in a bit more `formal' pseudo-code as such:\\\\
+---------------------------------------------------------------------------------------------------------
+Search($r$)\\
+	\hspace*{7mm} set $\mcal{B} := \{r\}$\\
+	\hspace*{14mm} while $\mcal{B} \neq \emp$\\
+	\hspace*{21mm} let $v \in \mcal{B}$\\
+	\hspace*{21mm} set $\mcal{B} \leftarrow \mcal{B} \setminus \{v\}$\\
+	\hspace*{21mm} if $v$ is unmarked\\
+	\hspace*{28mm} mark $v$\\
+	\hspace*{28mm} for each arc $(v, w)$\\
+	\hspace*{35mm} set $\mcal{B} \leftarrow \mcal{B} \cup \{w\}$\\
+---------------------------------------------------------------------------------------------------------\\
+Note that this algorithm allows multiple copies of the same node to be put into the bag. This $could$ pose a problem as it would require our algorithm excecute superfluous steps to terminate. We can get around this by putting edges into the bag instead of nodes. Let's update our pseudo-code to reflect this:\\\\\\\\\\\\\\\\
+---------------------------------------------------------------------------------------------------------
+Search($r$)\\
+	\hspace*{7mm} set $\mcal{B} := \{(r, *)\}$\\
+	\hspace*{14mm} while $\mcal{B} \neq \emp$\\
+	\hspace*{21mm} let $(u, v) \in \mcal{B}$\\
+	\hspace*{21mm} set $\mcal{B} \leftarrow \mcal{B} \setminus \{(u, v)\}$\\
+	\hspace*{21mm} if $v$ is unmarked\\
+	\hspace*{28mm} mark $v$\\
+	\hspace*{28mm} set $p(v) \leftarrow u$\\
+	\hspace*{28mm} for each arc $(v, w)$\\
+	\hspace*{35mm} set $\mcal{B} \leftarrow \mcal{B} \cup \{(v, w)\}$\\
+---------------------------------------------------------------------------------------------------------\\
+Where $(r, *)$ is some pseudo-edge and $p(v)$ is the parent of $v$.
+\subsubsection{Time Complexity}
+We search every edge out of $v$ only once (when $u$ is first marked). The edge is added to the bag once and removed from the bag once. Thus the time complexity is $O(m)$ (where $m$ is the cardinality of the edge set.)
+\subsubsection{Validity}
+\thm Let $G$ be a connected, undirected graph. The generic search algorithn finds every vertex in $G$.\\\\
+\proo We must show that every vertex is marked by the algorithm. We will do this by induction on the smallest number $k$ of edges in a path from the vertex to the root.\\
+Base Case: $k=0$. Then $v$ is the root node $r$, but $r$ is marked by the algorithm.\\
+Induction Hypothesis: Assume any vertex $v$ that has a path of $k-1$ or fewer edges to the root $r$ is marked.\\
+Inductive Step: Assume there exists a path $P$ with $k$ edges from $v$ to $r$. i.e.
+\[P = \{v = v_k, v_{k-1}, \dots, v_1, v_0 = r\}\]
+Then there is a path $Q$ with $k-1$ edges from $u = v_{k-1}$ to $r$. i.e.
+\[Q = \{u = v_{k-1}, \dots, v_1, v_0 = r\}\]
+By our induction hypothesis $u$ is marked. After we mark $u$ we pace the edges incident to it in the bag. Therefore the edge $(u, v)$ is added to the bag. Thus when ($u, v$) is removed from the bag we will mark $v$ if it is not marked already.
+\qed
+\subsubsection{Search Trees}
+Note that after running this algorithm, each non-root vertex has exactly one predecessor.\\\\
+\thm Let $G$ be a connected, undirected graph. Then the predecessor edges form a tree rooted at $r$.\\\\
+\proo We will prove this by induction on the number $k$ of marked vertices.\\
+Base Case: $k=1$. The root vertex $r$ is the first one marked. Trivially, this forms a tree.\\
+Induction Hypothesis: Assume the predecessor edges for the first $k-1$ marked vertices form a tree rooted at $r$.\\
+Inductive Step: Let $v$ be the $k^{th}$ vertex to be marked. Assume that $v$ was marked when the edge $(u, v)$ was removed. Then $u = p(v)$. But $(u, v)$ was added to the bag when we marked vertex $u$. Therefore $u$ is in the set $S$ of the first $k-1$ vertices to be marked. By the induction hypothesis, the predecessor edges for $S$ form a tree $T$ rooted at $r$. Thus $T \cup (p(v), v)$ is a tree rooted at $r$ on the first $k$ marked vertices.
+\qed\\\\
+\thm For any vertex $v$, the path from $v$ to $r$ given by the search tree $T$ of predecessor edges is a shortest path.
+\subsubsection{The Bag}
+The bag is just shorthand for ``some data structure''. In this algorithm, the bag can be any data structure we want but our choice has some important consequences. Specifically, for the graph search algorithm we really want to use one of three data structures, each of which will give a distinct algorithm:
+\begin{enumerate}
+	\item Queue: The generic search algorithm becomes Breadth-First Search
+	\item Stack: The generic searcg algorithm becomes Depth-First Search
+	\item Priority Queue: The generic search algorithm becomes a Minimum Spanning Tree algorithm
+\end{enumerate}
+\subsection{Breadth-First Search}
+Breadth-First search is an implementation of the generic search algorithm using a queue as the data structure (the bag.) Because we use a queue, edges are added in the order of their distance from $r$. The vertices are then marked in order of their distance from $r$.
+\subsubsection{Breadth-First Search \& Bipartite Graphs}
+\thm Let $G$ be a graph. Then $G$ is bipartite if and only if it contains no odd-length cycles.\\\\
+\proo ($\imply$) Assume $G$ contains as a subgraph an odd-length cycle $C$. Let
+\[C := \{v_0, v_1, \dots, v_{2k}\}\]
+WLOG assume $v_0 \in Y$. Then
+\[v_0 \in Y \imply v_1 \in X \imply v_2 \in Y \imply v_3 \in X \dots \imply v_{2k} \in Y\]
+but $(v_0, v_{2k}) \in E$. Thus $v_0 \in Y \imply v_{2k} \in X$, a contradiction. Thus $G$ is not bipartite.\\
+($\Leftarrow$) Assume $G$ contains no odd-length cycles. Then select an arbitrary root vertex $r$ and run the BFS algorithm. We want to show that if $G$ contains no odd-length cycles we can find two sets $X$, and $Y$ such that each edge goes only between $X$ and $Y$. Recall that for every edge ($u, v$) we have that $u$, and $v$ are either in the same layer or are in adjacent layers. Now set
+\[X := \bigcup_{\ell \text{ odd}} S_{\ell} \text{, and, } Y := \bigcup_{\ell \text{ odd}} S_{\ell}\]
+where $S$ is a set of nodes in the layer of a BFS-generated search tree, and $\ell$ is the level of the node form the root. We claim that this choice of $X$, and $Y$ gives a bipartite graph. Suppose that for each non-tree edge ($u, v$), that $u$, and $v$ are in adjacent layers. Assume that there exists a non-tree edge $(u, v)$ with $u$, and $v$ in the same layer. Let $z$ be the closest common ancestor of $u$, and $v$ in the search tree $T$ from $u$ to $v$; let $Q$ be the part in $T$ from $v$ to $z$. Since $u$, and $v$ are in the same layer $|P| = |Q|$. But then the cycle $C = P \cup Q \cup (u, v)$ has an odd number of edges, so $(u, v)$ can't exist, a contradiction.
+\qed
+\subsection{Depth-First Search}
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Greedy Algorithms}
+\subsection{Scheduling Problem}
+\subsection{Dijkstra's Shortest Path Alorithm}
+\subsection{Huffman Codes}
+\subsection{Minimum Spanning Tree Problem}
+\subsubsection{Prim's Algorithm}
+\subsubsection{Bor$\mathring{\text{u}}$vka's Algorithm}
+\subsubsection{Reverse-Delete Algorithm}
+\subsection{Clustering}
+\subsection{Set Cover Problem}
+\subsection{Matroids}
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Dynamic Programming}
+\subsection{Fibonacci Numbers}
+\subsection{Weighted Interval Selection}
+\subsection{Knapsack Problem}
+\subsection{Humpty Dumpty Problem}
+\subsection{Bellman-Ford Algorithm}
+\subsection{RNA Secondary Structure}
+\subsection{Sequence Alignment}
+\subsection{All-Pairs Shortest Paths}
+\subsection{Independeny Set on a Tree}
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Network Flows}
+\subsection{Ford-Fulkerson Algorithm}
+\subsection{Max Flow - Min Cut Theorem}
+\subsection{Model Extensions}
+\subsection{Bipartite Matching}
+\subsection{Applications of Network Flows}
+\subsection{Maximum Capacity Augmenting Path Algorithm}
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Data Structures}
+\subsection{Priority Queues \& Heaps}
+\subsection{Hashing}
+\subsection{String Matching}
+\subsection{Binary Search Trees}
+\subsection{Data Structure for Disjoint Sets}
+\subsection{Segment Trees}
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
