@@ -565,6 +565,85 @@ but $(v_0, v_{2k}) \in E$. Thus $v_0 \in Y \imply v_{2k} \in X$, a contradiction
 where $S$ is a set of nodes in the layer of a BFS-generated search tree, and $\ell$ is the level of the node form the root. We claim that this choice of $X$, and $Y$ gives a bipartite graph. Suppose that for each non-tree edge ($u, v$), that $u$, and $v$ are in adjacent layers. Assume that there exists a non-tree edge $(u, v)$ with $u$, and $v$ in the same layer. Let $z$ be the closest common ancestor of $u$, and $v$ in the search tree $T$ from $u$ to $v$; let $Q$ be the part in $T$ from $v$ to $z$. Since $u$, and $v$ are in the same layer $|P| = |Q|$. But then the cycle $C = P \cup Q \cup (u, v)$ has an odd number of edges, so $(u, v)$ can't exist, a contradiction.
 \qed
 \subsection{Depth-First Search}
+Running the generic search algorithm but using a stack as our bag gives depth-first search. An interesting property of depth-first search is that it partitions the edges of an undirected graph into two types:
+\begin{enumerate}
+	\item Tree edges: Predecessor edges in the DFS tree $T$
+	\item Back edges: Edges where one endpoint is an ancestor of the other endpoint in $T$
+\end{enumerate}
+we cannot have edges of the following type:
+\begin{enumerate}
+	\setcounter{enumi}{2}
+	\item Cross edges: Edges where neither endpoint is an ancestor of the other in $T$
+\end{enumerate}
+\ \\
+We can also define depth-first search recursively as such:\\\\\\\\\\\\\\
+---------------------------------------------------------------------------------------------------------
+RecursiveDFS($r$)\\
+	\hspace*{7mm} mark $r$\\
+	\hspace*{7mm} for each edge ($r, v$)\\
+	\hspace*{14mm} if $v$ is unmarked\\
+	\hspace*{21mm} set $p(v) \leftarrow r$\\
+	\hspace*{21mm} RecursiveDFS($v$)\\
+---------------------------------------------------------------------------------------------------------\\
+\subsubsection{Ancestral Edges Theorem}
+\thm Let $T$ be a depth-first search-generated tree in an undirected graph $G$. Then for each edge ($u, v$), either $u$ is an ancestor of $v$ in $T$, or $v$ is an ancestor of $u$.\\\\
+\proo WLOG assume that $u$ is marked before $v$. Consider the time $u$ is marked during RecursiveDFS($u$). In RecursiveDFS($u$), the algorithm examines every arc incident to $u$. This leads to two cases:\\
+Case 1: $v$ is unmarked when RecursiveDFS($u$) examines $(u, v)$. Then RecursiveDFS($u$) sets $p(v) \leftarrow u$. Therefore $(u, v)$ is a tree edge.\\
+Case 2: $v$ is marked when the algorithm examines $(u, v)$. But $v$ must have been marked after $u$, so it was marked during RecursiveDFS($u$). Thus we have a series of vertices $\{u = w_0, w_1, \dots, w_{\ell -1}, w_{\ell} = v\}$ where $p(w_k) = w_{k-1}$. Therefore $u$ is an ancestor of $v$ in $T$ and is thus a back edge.
+\qed
+\ \\\\
+\cor Let $T$ be a DFS tree in an undirected graph $G$. Then every non-tree edge is a back edge.
+\subsubsection{Previsit \& Postvisit}
+We can add a clock to the RecursiveDFS($r$) algorithm to record when we visit a vertex for the first time (previsit) and when we visit a vertex for the last time (postvisit). Let's update our recursive algorithm to include this.\\\\\\\\\\\\\\\\\\\\\\\\
+---------------------------------------------------------------------------------------------------------
+clock $\leftarrow 0$\\
+RecursiveDFS($r$)\\
+	\hspace*{7mm} mark $r$\\
+	\hspace*{7mm} pre($r) \leftarrow$ clock\\
+	\hspace*{7mm} clock++\\
+	\hspace*{7mm} for each edge ($r, v$)\\
+	\hspace*{14mm} if $v$ is unmarked\\
+	\hspace*{21mm} set $p(v) \leftarrow r$\\
+	\hspace*{21mm} RecursiveDFS($v$)\\
+	\hspace*{7mm} post($r) \leftarrow$ clock\\
+	\hspace*{7mm} clock++\\
+---------------------------------------------------------------------------------------------------------\\
+To visualize this imagine that a caterpillar is crawling along the graph like so:\\\\
+\includegraphics[scale=0.5]{cattree1}
+\ \\
+The clock records the first time the caterpillar visits a node and the last time the caterpillar visits a node. Then, let the black number be the clock on the previsit, and let the blue number be the clock on the postvisit. We get this
+\includegraphics[scale=0.5]{cattree2}
+\ \\
+Note that pre($v$) is the time that the caterpillar arrives at the subtree rooted at $v$, and post$(v)$ is the time when the caterpillar leaves that subtree.\\\\
+Depth-first search expores one subtree of the tree at-a-time. This means that we can represent each subtree as an interval over $\R$. More strongly, the set of intervals is laminar (for every pair of intervals, $I_1, I_2$, either $I_1$, and $I_2$ are disjoint, or one is a subset of the other.)
+\subsubsection{Postvisit Times}
+For an arc $(u, v)$ the following always hold:
+\begin{enumerate}
+	\item Tree arcs: post($v)\ \lt$ post($u$)
+	\item Forward arcs: post($v)\ \lt$ post($u$)
+	\item Backward arcs: post($u)\ \lt$ post($v$)
+	\item Cross arcs: post($v)\ \lt$ post($u$)
+\end{enumerate}
+Note that only for backward arcs is post($u)\ \lt$ post($v$). This is a useful result.
+\subsubsection{Directed Acyclic Graphs}
+\thm A directed graph $G$ is acyclic if and only if depth-first search produces no backward arcs.\\\\
+\proo ($\imply$) Let DFS give a backward arc ($u, v$). By definition $u$ is a descendant of $v$ in the DFS tree $T$. Therefore there exists a path $P$, given by $P = \{v = v_0, v_1, \dots, v_k =u\} \in T$. But then $P \cup (u, v)$ is a directed cycle in $T$, a contradiction.\\
+($\Leftarrow$) Assume DFS gives no backward arcs. Suppose there is a directed cycle $C = \{v_0, v_1, \dots, v_k, v_0\} \in T$. Then, as there are no backward arcs we have that post($v_0$) $\gt$ post($v_1$) $\gt$ post($v_2$) $\gt\ \dots\ \gt$ post($v_k$) $\gt$ post($v_0$), a contradiction.
+\qed\\\\
+\cor We have an $O(m)$ algorithm to test whether the graph is acyclic.\\\\
+\proo Run DFS and check for backward arcs.
+\subsubsection{Topological Orderings}
+A directed graph has a ``Topological Ordering" if the vertices can be ordered such that every arc is from right to left.\\\\
+\thm A directed graph $G$ has a topological ordering if and only if DFS produces no backward arcs.\\\\
+\proo ($\imply$) If DFS produces a backward arc then $G$ contains a cycle $C$. Let the cycle $C = \{v_0, v_1, \dots, v_k, v_0\}$, where WLOG $v_0$ is the leftmost vertex of the cycle in the order. But then the arc $(v_0, v_1)$ goes from left to right, a contradiction.\\
+($\Leftarrow$) Assume DFS gives no backward arcs. Then for every arc $(u, v)$, we have that post($u$) $\gt$ post($v$). Thus, if we place each vertex $v$ at coordinate post($v$) on the $x$-axis, then every arc goes from right to left and hence $G$ has a topological ordering.
+\qed\\\\
+\cor We have an $O(m)$ algorithm to test whether or not we have a topological ordering.\\\\
+\cor A directed graph is acyclic if and only if it has a topological ordering.
+\subsubsection{Disconnected Graphs \& Strongly Connected Components}
+For disconnected undirected graphs, a depth-first search from a vertex $r$ will find the entire component containing the vertex $r$. Therefore, if we want to discover the entire graph, not just the component containing $r$, we must run DFS from another vertex (in a different component).\\\\
+In a directed graph, a subgraph $S$ is said to be strongly connected if for every vertex pair $u$, $v \in S$, there exists a directed path from $v$ to $u$ and vice versa. DFS can be used to decompose a directed graph into its strongly connected components very quickly.\\\\
+\thm There is an $O(m)$ algorithm to find stromngly connected components of directed graphs.
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -593,7 +672,7 @@ where $S$ is a set of nodes in the layer of a BFS-generated search tree, and $\e
 \subsection{RNA Secondary Structure}
 \subsection{Sequence Alignment}
 \subsection{All-Pairs Shortest Paths}
-\subsection{Independeny Set on a Tree}
+\subsection{Independent Set on a Tree}
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
