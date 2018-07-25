@@ -55,6 +55,7 @@
 \newcommand{\Biggceil}[1]{\Bigg\lceil #1 \Bigg\rceil}
 \newcommand{\mcal}[1]{\mathcal{#1}}
 \newcommand{\bb}[1]{\mathbb{#1}}
+\newcommand{\opt}{\text{opt}}
 
 \title{COMP 251: Algorithms \& Data Structures}
 \author{Owen Lewis}
@@ -649,7 +650,82 @@ In a directed graph, a subgraph $S$ is said to be strongly connected if for ever
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Greedy Algorithms}
-\subsection{Scheduling Problem}
+Greedy algorithms are a class of algorithms characterized by how they make locally optimal choices at each step. They have a few properties:
+\begin{itemize}
+	\item They're fast!
+	\item They're usually very simple!
+	\item They're easy to code!
+	\item They rarely work!
+\end{itemize}
+Thus for this topic in the course the goal is to understand some basic (working) greedy algorithms along with some basic techniques and when such techniques can succesfully be applied.
+\subsection{The Task Scheduling Problem}
+Suppose a firm receives a set $J$ of $n$ job orders from some customers, but the firm can only process one order at once. Suppose the job of customer $i$ will take $t_i$ units of time to complete. Assume each customer wants their job done as quickly as possible (and will pay accordingly.)\\\\
+Assume the firm processes the jobs in order $\{1, 2, \dots, n\}$. Then the wating time of customer $\ell$ will be
+\[w_{\ell} = \sum_{i = 1}^{\ell} t_i\]
+Under the assumption that the customers will pay according to time, the firm wants to minimize the sum of the waiting times. That is, they want to minimize
+\[\sum_{\ell = 1}^{n}w_{\ell} = \sum_{\ell = 1}^{n}\sum_{i = 1}^{\ell}t_i\]
+We'll use a greedy approach to solve this problem:\\\\
+---------------------------------------------------------------------------------------------------------
+Schedule(J)\\
+	\hspace*{7mm} sort the list of orders in non-decreasing order of their completion time\\
+	\hspace*{7mm} schedule the jobs in this order\\
+---------------------------------------------------------------------------------------------------------\\
+Unfortunately, unlike divide and conquer algorithms that generally work, and where most of the proofs follow directly from strong induction (requiring only the base cases be verified), greedy algorithms don't work in general and thus have to be proved in more creative ways. Let's now prove the task scheduling algorithm works.\\\\
+\proo Let the algorithm schedule the tasks in the order $\{1, 2, \dots, n\}$. Assume there is a better schedule $\mcal{S}$. Then there must be a pair of jobs $i, j$ such that
+\begin{enumerate}
+	\item Job $i$ is (WLOG) scheduled immediately before job $j$ by $\mcal{S}$.
+	\item Job $i$ is longer than job $j$. In other words, $t_i\ \gt\ t_j$.
+\end{enumerate}
+This implies that exchanging jobs $i$, and $j$ leads to a more optimal schedule $\hat{\mcal{S}}$. Observe that after exchanging the two jobs the waiting time for all the other jobs remains the same (draw a picture if you need to convince yourself.) That is,
+\[\hat{w}_k = w_k, \forall k \neq i, j\]
+but obviously
+\[\hat{w}_i + \hat{w}_j\ \lt\ w_i + w_j\]
+a contradiction. Thus $\mcal{S}$ was the optimal solution.
+\qed\\\\
+The runtime of this algorithm is $O(n \log n)$ as the only real step is sorting the list of jobs by length.
+\subsection{The Interval Selection Problem (Class Scheduling)}
+Suppose there is one classroom and as set $I = \{1, 2, \dots, n\}$ of $n$ classes that want to use the room. Suppose each class $i \in I$ has a start time $s_i$, and a finish time $f_i$. Our goal is to book as many classes into that room as possible (in a certain period of time) but no more than one class can use the room at once. Let's try using a greedy algorithm to solve this problem. There's a couple different possibilities we can try:
+\begin{enumerate}
+	\item First start: Choose the class that starts first and iterate over the remaining non-conflicting classes
+	\item Shortest duration: Select the class that is the shortest and then iterate over the remaining non-conflicting classes
+	\item Minimum Conflict: Find the course that conflicts with the fewest other courses and iterate over the remaining non-conflicting classes
+	\item First finish: Choose the class that finishes first and iterate over the remaining non-conflicting courses.
+\end{enumerate}
+\ \\
+But do any of these actually work? Let's see.\\\\\\\\\\
+Does first start work? Nope. Consider the example:\\\\
+\includegraphics[scale=0.3]{ce1.png}\\
+Note that that algorithm would select the blue interval where the eight orange intervals would be the optimal solution.\\\\
+How about shortest duration? Nope. Consider the following:\\\\
+\includegraphics[scale=0.3]{ce2.png}\\
+This algorithm would select the blue interval where the two orange intervals would be the optimal solution.\\\\
+What about minimum conflict? Nope.\\\\
+\includegraphics[scale=0.3]{ce3.png}\\
+This algorithm would select the orange interval because it only conflicts with the two blue intervals, and then two of the purple intervals, but the blue intervals plus the red intervals along the bottom is the optimal solution even though the red intervals each conflict with the three purple intervals, and the blue intervals each conflict with four intervals.\\\\
+First finish? Yep this one works. First we'll write down the pseudo-code algorithm and then we'll prove that it works.\\\\\\\\\\\\\\\\\\\\
+---------------------------------------------------------------------------------------------------------
+FinishFirst($I$)\\
+	\hspace*{7mm} sort the classes by their finish time in non-decreasing order\\
+	\hspace*{7mm} initialize the set $S := \emp$ to be the set of scheduled classes\\
+	\hspace*{7mm} while $I \neq \emp$\\
+	\hspace*{14mm} let $i$ be the lowest index class in $I$\\
+	\hspace*{14mm} set $S \leftarrow S \cup \{i\}$ and set $I \leftarrow I \setminus \{i\}$\\
+	\hspace*{14mm} for each class $j \in I$\\
+	\hspace*{21mm} if $s_i\ \lt\ f_i$\\
+	\hspace*{28mm} set $I \leftarrow I \setminus \{i\}$\\
+	\hspace*{7mm} return $S$\\
+---------------------------------------------------------------------------------------------------------\\
+Before we prove the algorithm we need some help from a lemma\\\\
+\lem Let $c$ be the class with the earliest finish time. Then there is an optimal solution that contains $c$.\\\\
+\proo Recall the classes are indexed such that $f_1 \leq f_2 \leq \dots \leq f_n$. Then take an optimal solution $\mcal{S}$ and assume that $c \in \mcal{S}$. Let $i$ be the lowest index in $\mcal{S}$. We claim that $\mcal{S} \setminus \{i\} \cup \{c\}$ is a feasible allocation of maximum size. This follows as $f_i \leq s_j$ for any $j \in \mcal{S} \setminus \{i\}$. But $f_1 \leq f_i \leq s_j$ so $c$ doesn't conflict with any class in $\mcal{S} \setminus \{i\}$. Therefore $\mcal{S} \setminus \{i\} \cup \{c\}$ is feasible with cardinality equal to $|\mcal{S}|$.
+\qed\\\\
+We can now prove that the algorithm works.\\\\
+\proo We'll proceed by induction on the cardinality of the optimal solution.\\
+Base Case: Let $|\opt(I)|$ = 1. Then the algorithm outputs $c$ and this is trivially an optimal solution.\\
+Induction Hypothesis: If $|\opt(I)| = k$ then the algorithm outputs an optimal solution.\\ 
+Inductive Step: Let $|\opt(I)| = k+1$. Then the algorithm outputs $\{c\} \cup \text{FirstFinish}(I\setminus k)$. But by the previous lemma there exists an optimal solution $\hat{\mcal{S}}$ containing $c$. Thus $\hat{\mcal{S}}\setminus \{I\}$ is an optimal solution for the subproblem $I \setminus X$ $\imply |\opt(I)| = k$. But then by our induction hypothesis, the algorithm gives an optimal solution to the sub-problem $I \setminus X$ $\imply |\text{FirstFinish}(I \setminus X)| = k \imply |\{c\}\cup\text{FirstFinish}(I \setminus X)| = k+1$. Thus the algorithm outputs an optimal solution.
+\qed\\\\
+There are at most $n$ iterations, and it takes $O(n)$ time to find a class that finishes first. Therefore the runtime is $O(n^2)$. With better implementation, we can get the runtime down to $O(n \log n)$.
 \subsection{Dijkstra's Shortest Path Alorithm}
 \subsection{Huffman Codes}
 \subsection{Minimum Spanning Tree Problem}
@@ -665,7 +741,7 @@ In a directed graph, a subgraph $S$ is said to be strongly connected if for ever
 
 \section{Dynamic Programming}
 \subsection{Fibonacci Numbers}
-\subsection{Weighted Interval Selection}
+\subsection{The (Weighted) Interval Selection Problem}
 \subsection{Knapsack Problem}
 \subsection{Humpty Dumpty Problem}
 \subsection{Bellman-Ford Algorithm}
