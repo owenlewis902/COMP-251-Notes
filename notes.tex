@@ -727,6 +727,52 @@ Inductive Step: Let $|\opt(I)| = k+1$. Then the algorithm outputs $\{c\} \cup \t
 \qed\\\\
 There are at most $n$ iterations, and it takes $O(n)$ time to find a class that finishes first. Therefore the runtime is $O(n^2)$. With better implementation, we can get the runtime down to $O(n \log n)$.
 \subsection{Dijkstra's Shortest Path Alorithm}
+Given a directed graph $G = (V, A)$ with a source vertex $s \in V$, let each arc arc $a \in A$ have a non-negative length $\ell_a$. Then the length of a path $P \subseteq G$ is
+\[\ell(P) = \sum_{a \in P} \ell_a\]
+Our goal is to find the shortest path from $s$ to every other vertex $v \in V$. We can do this using \ti{Dijkstra's Shortest Path Algorithm}.\\\\
+---------------------------------------------------------------------------------------------------------
+Dijkstra($s, G$)\\
+	\hspace*{7mm} set $\mcal{S} := \emp$\\
+	\hspace*{7mm} set $d(s) := 0$, and set $d(v) := \infty$, $\forall v \in V\setminus \{s\}$\\
+	\hspace*{7mm} while $\mcal{S} \neq V$\\
+	\hspace*{14mm} if $\ds v = \text{argmin}_{u \in V \setminus \mcal{S}}$\\
+	\hspace*{21mm} set $\mcal{S} \leftarrow \mcal{S} \cup \{v\}$\\
+	\hspace*{14mm} for each arc $(v, w)$\\
+	\hspace*{21mm} if $d(w)\ \gt\ d(v) + \ell_{vw}$ and $w \in V\setminus S$\\
+	\hspace*{28mm} set $d(w) = d(v) + \ell_{vw}$\\
+---------------------------------------------------------------------------------------------------------\\
+This is indeed a greedy algorithm because it myopically selects the vertex with the smallest label. Note this algorithm only calculates the shortest path distances, but it's easy to tweak it to keep track of the actual paths themselves:\\\\
+---------------------------------------------------------------------------------------------------------
+Dijkstra($s, G$)\\
+	\hspace*{7mm} set $\mcal{S} := \emp$\\
+	\hspace*{7mm} set $\mcal{T} := \emp$\\
+	\hspace*{7mm} set $\text{pred}(s) \leftarrow$ NULL, pred($v$) $\leftarrow$ \_\_\\
+	\hspace*{7mm} set $d(s) := 0$, and set $d(v) := \infty$, $\forall v \in V\setminus \{s\}$\\
+	\hspace*{7mm} while $\mcal{S} \neq V$\\
+	\hspace*{14mm} if $\ds v = \text{argmin}_{u \in V \setminus \mcal{S}}$\\
+	\hspace*{21mm} set $\mcal{S} \leftarrow \mcal{S} \cup \{v\}$\\
+	\hspace*{21mm} set $\mcal{T} \leftarrow \mcal{T} \cup (\text{pred}(u, v))$\\
+	\hspace*{14mm} for each arc $(v, w)$\\
+	\hspace*{21mm} if $d(w)\ \gt\ d(v) + \ell_{vw}$ and $w \in V\setminus S$\\
+	\hspace*{28mm} set $d(w) = d(v) + \ell_{vw}$\\
+	\hspace*{28mm} set pred($w$) $\leftarrow v$\\
+---------------------------------------------------------------------------------------------------------\\
+Note that this is just a generalization of Breadth-First search!\\\\
+To show that the algorithm works first observe that $\mcal{S}$ is a set of vertices and $\mcal{T}$ is a set of arcs. Then let $\mcal{S}^k$ be the set of vertices in $\mcal{S}$ at the end of the $k^{th}$ iteration, and let $\mcal{T}^k$ be the set of arcs in $\mcal{T}$ at the end of the $k^{th}$ iteration. Furthermore observe that the arcs in $\mcal{T}^k$ are between the nodes in $\mcal{S}^k$. Therefore $\mcal{G}^k = (\mcal{S}^k, \mcal{T}^k)$ is just a directed graph. Note that $\mcal{G} = \mcal{G}^n$ is the final outcome of the algorithm.  Next consider the following lemma.\\\\
+\lem The graph $\mcal{G}^k$ is a directed tree rooted at $s$.\\\\
+\proo We will proceed by induction on $k$.\\
+Base Case: $k=1$. Then $\mcal{S}^1$ contains only $s$, and $\mcal{T}^1= \emp$ as pred($s$) = NULL. Therefore it's trivially an arborescence.\\
+Induction hypothesis: $\mcal{G}^{k-1} = (\mcal{S}^{k-1}, \mcal{T}^{k-1})$ is an arborescence rooted at $s$.\\
+Inductive Step: Consider $\mcal{G}^k = (\mcal{S}^k, \mcal{T}^k)$. Let $v_k$ be the vertex added to $\mcal{S}$ in the $k^{th}$ iteration. Then $\mcal{S}^k = \mcal{S}^{k-1} \cup \{v_k\} \imply \mcal{T} = \mcal{T}^{k-1} \cup (\text{pred}^{k-1}(v_k), v_k)$. Therefore $v_k$ has in-degree exactly 1 in $G^k$, and out-degree exactly 0. Then by our induction hypothesis $\mcal{G}^{k-1}$ is an arborescence rooted at $s$. Furthermore by definition, pred$^{k-1}(v_k) \in \mcal{S}^{k-1} \imply \mcal{G}^k = (\mcal{S}^k, \mcal{T}^k)$ is an arborescence rooted at $s$ with $v_k$ as a leaf.
+\qed\\\\
+Now we just need to show that the paths in the outputted arborescence are the shortest paths in the graph and we'll have proved the algorithm.\\\\
+\thm The graph $\mcal{G}^k = (\mcal{S}^k, \mcal{T}^k)$ gives the shortest distances from $s$ to every vertex in $\mcal{S}^k$.\\\\
+\proo Again, we'll proceed by induction on $k$.\\
+Base Case: $k=1$. Then this is trivially true as $d^1(s) = 0 = d^*(s)$.\\
+Induction Hypothesis: Assume $\mcal{G}^{k-1} = (\mcal{S}^{k-1}, \mcal{T}^{k-1})$ gives the shortest distance from $s$ to every vertex in $\mcal{S}^{k-1}$. i.e. $d^{k-1}(v) = d^*(v)$, $\forall v \in \mcal{S}^{k-1}$.\\
+Inductive Step: Consider the graph $\mcal{G}^{k} = (\mcal{S}^k, \mcal{T}^k)$. Let $v_k$ be the vertex added to $\mcal{S}$ in the $k^{th}$ iteration. Take the sortest path $P$ from $s$ to $v_k$ with as many arcs in common with $\mcal{G}^k$ as possible. Let $x$ be the last vertex of $\mcal{G}^{k-1}$ in $P$, and let $y \notin \mcal{S}^{k-1}$ be the vertex after $x$ in $P$. Such a $y$ exists or we are done. Since $y$ is on the shortest path from $s$ to $v_k$ and the arc lengths are non-negative, we have that $d^*(y) \leq d^*(v_k)\ \lt\ d^k(v_k)$. We have a strict inequality or we'd be done. But since $x \in \mcal{S}^{k-1}$ we have that $d^k(y) \leq d^{k-1}(x) + \ell(x, y) = d^*(x) + \ell(x, y) = d^*(y)$. And therefore $d^k(y) \leq d^*(y)\ \lt\ d^k(v_k)$, which contradicts our choice of $v_k$ as $d^k(y)\ \lt\ d^k(v_k)$.
+\qed\\\\
+There are $n$ iterations and there are at most $n$ distance updates in each iteration. Therefore the runtime is $O(n^2)$. We can implement this algorithm faster, in $O(m \log n)$ time, using a heap.
 \subsection{Huffman Codes}
 \subsection{Minimum Spanning Tree Problem}
 \subsubsection{Prim's Algorithm}
