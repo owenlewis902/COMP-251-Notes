@@ -867,9 +867,45 @@ Inductive Step: Assume $|\mcal{A}| = k+1$. Let $a$, and $b$ be the least frequen
 \qed\\\\
 There are $n-2$ iterations of the algorithm. Each iteration takes $O(n)$ time to find the two least-frequent letters and update the alphabet. Therefore the running time is $O(n^2)$. This can be improved to $O(n \log n)$ by implementing it with a heap.
 \subsection{Minimum Spanning Tree Problem}
+Suppose we're given a graph $G = (V, E)$ where each edge $e \in E$ has an associated non-negative cost $c_e$. For convenience assume that all edges are distinct. Then the cost of a tree $T \subseteq E(G)$ is
+\[c(T) = \sum_{e \in T}c_e\]
+Our goal is to find a spanning tree $T$ that minimizes the cost. We'll see three algorithms to do this. All three of the following algorithms work, but we'll prove them later.\\\\
+\subsubsection{Kruskal's Algorithm}
+---------------------------------------------------------------------------------------------------------
+Kruskal($G$)\\
+	\hspace*{7mm} sort the edges $\{e_1, e_2, \dots, e_m\}$ by cost in increasing order\\
+	\hspace*{7mm} set $T := \emp$\\
+	\hspace*{7mm} for each $i \in \{1, 2, \dots, m\}$\\
+	\hspace*{14mm} let $e_i = (u, v)$\\
+	\hspace*{14mm} if $u, v$ are in different components\\
+	\hspace*{21mm} set $T \leftarrow T \cup \{e_i\}$\\
+---------------------------------------------------------------------------------------------------------\\
+Sorting the edges takes time $O(m \log m)$. We then iterate $m$ times where each iteration takes $O(n)$ time. Therefore the runtime is $O(mn + m \log m) = O(mn)$. This runtime can be improved to $O(m \log n + m \log^* n)$ by using the data structure for disjoint sets, where $\log^*n$ is the number of nested logs that are required to get a number less than or equal to 1.
 \subsubsection{Prim's Algorithm}
+---------------------------------------------------------------------------------------------------------
+Prim($G$)\\
+	\hspace*{7mm} let $a \in V$ be some vertex\\
+	\hspace*{7mm} set $T := \{a\}$\\
+	\hspace*{7mm} while $V(T) \neq V$\\
+	\hspace*{14mm} let $e$ be the minimum cost edge in $\de(T)$\\
+	\hspace*{14mm} set $T \leftarrow T \cup \{e\}$\\
+---------------------------------------------------------------------------------------------------------\\
+Prim's algorithm takes $n$ iterations. Finding the minimum cost edge during each iteration takes $O(m)$. Therefore the runtime is $O(mn)$. This can be improved to $O(m + n \log n)$ by using Fibonacci heaps.
 \subsubsection{Bor$\mathring{\text{u}}$vka's Algorithm}
-\subsubsection{Reverse-Delete Algorithm}
+---------------------------------------------------------------------------------------------------------
+Bor$\mathring{\text{u}}$vka($G$)\\
+	\hspace*{7mm} set $T := \emp$\\
+	\hspace*{7mm} while $T$ has more than one component $\{S_1, S_2, \dots, S_\ell\}$\\
+	\hspace*{14mm} for each $i \in \{1, 2, \dots, \ell\}$\\
+	\hspace*{21mm} let $\ell_i$ be the minimum cost edge in $\de(T)$ \\
+	\hspace*{21mm} set $T \leftarrow T \cup e_1 \cup e_2 \cup \dots \cup e_{\ell}$\\
+---------------------------------------------------------------------------------------------------------\\
+We have at most $n$ components. Finding the minimum cut $\de(S_i)$ takes at most $O(m)$. We have $\log n$ iterations. Therefore the runtime is $O(mn \log n)$. This can be improved to $O(m \log^*n)$. 
+\subsubsection{The Cut Properties of Minimum Spanning Trees}
+\thm (Cut Property) Assume the edge costs are distinct. If $e$ is the cheapest edge in some cut $\de(S)$ then $e$ is in the MST.\\\\
+\proo Let $e = (u, v)$ be the cheapest edge in a cut $\de(S)$. Let $T^*$ be a minimum spanning tree and assume $e \notin T^*$. Since $T^*$ is a spanning tree, there exists a unique path $P \subseteq T$ from $u$ to $v$. Note that if $\hat{e} \in P$ then $(T^* \setminus \hat{e})\cup e$ is still a spanning tree. Also note that in any walk from $u$ to $v$ we must cross the cut, so there exists at least one edge $\hat{e} \in P \cap \de(S)$. But $c_{\hat{e}}\ \gt\ c_e \imply (T^* \setminus \hat{e}) \cup e$ is a cheaper spanning tree than $T^*$, a contradiction.
+\qed\\\\
+Note that this property trivially proves that the above three algorithms are correct as they all look for the minimum cost edge in a cut, and the theorem implies that that minimum cost edge must be in the MST.
 \subsection{Clustering}
 \subsection{Set Cover Problem}
 \subsection{Matroids}
