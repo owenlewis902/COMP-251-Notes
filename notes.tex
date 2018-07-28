@@ -26,6 +26,7 @@
 \newcommand{\lt}{\textless}
 \newcommand{\gt}{\textgreater}
 \newcommand{\imply}{\Rightarrow}
+\newcommand{\limply}{\Leftarrow}
 \newcommand{\x}{\cdot}
 \newcommand{\Ga}{\Gamma}
 \newcommand{\al}{\alpha}
@@ -772,8 +773,99 @@ Base Case: $k=1$. Then this is trivially true as $d^1(s) = 0 = d^*(s)$.\\
 Induction Hypothesis: Assume $\mcal{G}^{k-1} = (\mcal{S}^{k-1}, \mcal{T}^{k-1})$ gives the shortest distance from $s$ to every vertex in $\mcal{S}^{k-1}$. i.e. $d^{k-1}(v) = d^*(v)$, $\forall v \in \mcal{S}^{k-1}$.\\
 Inductive Step: Consider the graph $\mcal{G}^{k} = (\mcal{S}^k, \mcal{T}^k)$. Let $v_k$ be the vertex added to $\mcal{S}$ in the $k^{th}$ iteration. Take the sortest path $P$ from $s$ to $v_k$ with as many arcs in common with $\mcal{G}^k$ as possible. Let $x$ be the last vertex of $\mcal{G}^{k-1}$ in $P$, and let $y \notin \mcal{S}^{k-1}$ be the vertex after $x$ in $P$. Such a $y$ exists or we are done. Since $y$ is on the shortest path from $s$ to $v_k$ and the arc lengths are non-negative, we have that $d^*(y) \leq d^*(v_k)\ \lt\ d^k(v_k)$. We have a strict inequality or we'd be done. But since $x \in \mcal{S}^{k-1}$ we have that $d^k(y) \leq d^{k-1}(x) + \ell(x, y) = d^*(x) + \ell(x, y) = d^*(y)$. And therefore $d^k(y) \leq d^*(y)\ \lt\ d^k(v_k)$, which contradicts our choice of $v_k$ as $d^k(y)\ \lt\ d^k(v_k)$.
 \qed\\\\
-There are $n$ iterations and there are at most $n$ distance updates in each iteration. Therefore the runtime is $O(n^2)$. We can implement this algorithm faster, in $O(m \log n)$ time, using a heap.
-\subsection{Huffman Codes}
+There are $n$ iterations and there are at most $n$ distance updates in each iteration. Therefore the runtime is $O(n^2)$. We can implement this algorithm faster, in $O(m \log n)$ time, using a heap.\\
+\subsection{The Binary Encoding Problem}
+Suppose we want to encode an alphabet $\mcal{A}$ in binary. Let's suppose for the sake of simplicity that we're using the english alphabet. That alphabet has 26 letters so we need at most 5 bits ($2^5$ = 32 $\gt$ 26) to encde the alphabet as $a = 00000, b = 00001, \dots, z = 11010$. To measure whether this is a good encoding, we need to come up with some definition of the cost of an encoding. The most intuitive way to do this is to sum up how long the final encoding is (in bits). Note that some letters are more frequent than others. Let $f_i$ be the frequency with which each letter $i$ appears in the alphabet. Then the cost of the encoding is given by
+\[\text{cost} = \sum_{i \in \mcal{A}} \ell_{i}f_{i}\]
+where $\ell_i$ is the length (number of bits of a letter's encoding). Our goal then is to minimize this cost. Note that we can reduce the cost by giving shorter encodings to higher-frequency letters such as $e$, or $t$, and longer encodings to lower-frequency letters, such as $z$, or $q$. Morse code is an encoding that does exactly this! Consider the table
+\begin{center}
+\begin{tabular}{| c c | c c | c c | c c |}
+\hline
+a & 01 & b & 1000 & c & 1010 & d & 100\\
+\hline
+e & 0 & f & 0010 & g & 110 & h & 0000 \\
+\hline
+i & 00 & j & 0111 & k & 101 & l & 0100\\
+\hline
+m & 11 & n & 10 & o & 111 & p & 0110 \\
+\hline
+q & 1101 & r & 010 & s & 000 & t & 1\\
+\hline
+u & 001 & v & 0001 & w & 011 & x & 1001 \\
+\hline
+y & 1011 & z & 1100 &&&&\\
+\hline
+\end{tabular}
+\end{center}
+\ \\
+Note that the two most frequent letters, e, and t, have only one bit, where unfrequent letters such as $j$, and $z$ all have 4. Note also that since we're giving some numbers fewer bits, we can get away with using only 4 bits for our least frequent letters instead of 5.\\\\
+The problem with this, however, is that Morse code isn't actually a binary code. Consider the following
+\begin{center}
+\begin{tabular}{ c c }
+1101 $\equiv$ q & 1101 $\equiv$ ttet\\
+1101 $\equiv$ ma & 1101 $\equiv$ gt\\
+1101 $\equiv$ tk & 1101 $\equiv$ met\\
+\end{tabular}
+\end{center}
+Indeed in real life Morse code is a ternary code where the third character is a rest after each letter.
+\subsubsection{Prefix Codes}
+A coding is said to be ``prefix-free'' if no codeword is a prefix of another. Note that due to the above example, Morse code is not prefix-free.
+\subsubsection{Binary Tree Representation}
+We can use binary trees to get prefix-free codes. Suppose we have a binary tree $T$. Let each left edge have the label 0, and each right edge have the label 1. Suppose each leaf node is associated with a letter. Then the codeword for a letter are the lables on the edges in the path from the root to the leaf associated with the letter.\\\\
+\thm A binary coding is prefix-free if and only if it has a binary tree representation.\\\\
+\proo ($\limply$) In a binary tree representation the letters are leaves. This means that there exists a path $P_x$ from the root to the leaf $x$, and a path $P_y$ from the root to the leaf $y$ for distinct letters $x$, and $y$. SInce $x \neq y$, the paths $P_x$, and $P_y$ must diverge at some point. Thus the codeword for $x$ can't be a prefix of the codeword for $y$.\\
+($\imply$) Given a binary coding system we can recursively define a binary tree representation where a letter whose codeword starts with 0 is placed on the left subtree, and where a letter whose codeword is 1 is placed on the right subtree.
+\qed\\\\
+Now given a tree $T$, what is the cost of that tree? Observe that the cost of any given letter is just the length of the path from the root to the letter in the tree because it corresponds directly with the length of the encoding. That is,
+\[\text{cost}(T) = \sum_{i \in \mcal{A}}f_id_i(T)\]
+where $d_i$ is the depth in the tree of the $i^{th}$ letter. We can prove this a little more formally.\\\\
+\proo We start with the definition of the cost.
+\begin{align*}
+\text{cost}(T) &= \sum_{i \in \mcal{A}}f_i\ell_i(T)\\
+\intertext{But the length of an encoding for a letter is just the number of edges in the path from the root to the leaf associated with that letter, so}
+	&= \sum_{i \in \mcal{A}}f_i \x \sum_{e : e\in P_i} 1
+\intertext{but that second sum is just the depth}
+	&= \sum_{i \in \mcal{A}} f_id_i(T)
+\end{align*}
+\qed\\\\
+From this observation, we see that given a tree $T$ with a specified shape, it's easy to determine the best way to assign the letters to the leaves; all we do is sort them by frequency and put the lowest-frequency letters near the bottom depth. Now all we have to do is find the best possible shape for a tree and we'll be done. This requires a bit of a trick. Let
+\[n_e := \sum_{i \in \mcal{A} : e \in P_i}f_i\]
+be the number of letters (weighted by frequency) whose root-leaf paths use edge $e$ in $T$. Then
+\[\text{cost}(T) = \sum_{e \in T} n_e\]
+This needs to be be proved.\\\\
+\proo From the previous observation we have
+\begin{align*}
+\text{cost}(T) &= \sum_{i \in \mcal{A}} f_id_i(T)\\
+	&= \sum_{i \in \mcal{A}} f_i \x \sum_{e : e \in P_i}1\\
+	&= \sum_{e \in T} 1\x \sum_{i \in \mcal{A} : e \in P_i} f_i\\
+	&= \sum_{e \in T} \sum_{i \in \mcal{A}} f_i\\
+	&= \sum_{e \in T} n_e
+\end{align*}
+\qed
+\subsubsection{The Key Formula}
+Let $\hat{T}$ be the tree formed by removing a pair of sibling-leaves $a$, and $b$, and by labeling their parent by $z$ where $f_z = f_a + f_b$. Then
+\[\text{cost}(T) = \text{cost}(\hat{T}) + f_a + f_b\]
+So now we knoww how to recursivelly find the optimal shape of the tree. Putting this all together gives us the Huffman Encoding Algorithm.
+\subsubsection{The Huffman Coding Algorithm}
+Suppose we're given an alphabet $\mcal{A}$ and a frequency list \tb{f}. Then we have the following algorithm to give an efficient binary encoding.\\\\
+---------------------------------------------------------------------------------------------------------
+Huffman($\mcal{A}$, \tb{f})\\
+	\hspace*{7mm} if $|\mcal{A}| = 2$\\
+	\hspace*{14mm} encode one letter with 0 and the other with 1\\
+	\hspace*{7mm} else\\
+	\hspace*{14mm} let $a, b \in \mcal{A}$ be the most infrequent letters\\
+	\hspace*{14mm} set $\hat{\mcal{A}} \leftarrow (\mcal{A} \setminus \{a, b\})\cup \{z\}$\\
+	\hspace*{14mm} set $f_z = f_a + f_b$\\
+	\hspace*{14mm} let $\hat{T}$ = Huffman($\hat{\mcal{A}}$, \tb{f})\\
+	\hspace*{14mm} create $T$ by adding $a, b$ as children of the leaf $z$ in $\hat{T}$\\
+---------------------------------------------------------------------------------------------------------\\
+Now we must prove that this algorithm gives a minimum cost encoding.\\\\
+\proo Proceed by induction on $|\mcal{A}|$\\
+Base Case: $|\mcal{A}| = 2$. Both letters are given codewords of length 1 so this can't be improved.\\
+Induction Hypothesis: Assume Huffman coding works if $|\mcal{A}| = k$.\\
+Inductive Step: Assume $|\mcal{A}| = k+1$. Let $a$, and $b$ be the least frequent letters. Then $a$, and $b$ are siblings for any $\hat{T}$, and cost($T$) = cost($\hat{T}$) + $f_a + f_b$. The best choice for $\hat{T}$ is the optimal solution for $\hat{\mcal{A}}$. By by the induction hypothesis, this is exactly the choice made recursively by the algorithm.
+\qed\\\\
+There are $n-2$ iterations of the algorithm. Each iteration takes $O(n)$ time to find the two least-frequent letters and update the alphabet. Therefore the running time is $O(n^2)$. This can be improved to $O(n \log n)$ by implementing it with a heap.
 \subsection{Minimum Spanning Tree Problem}
 \subsubsection{Prim's Algorithm}
 \subsubsection{Bor$\mathring{\text{u}}$vka's Algorithm}
