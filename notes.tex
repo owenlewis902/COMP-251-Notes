@@ -57,6 +57,7 @@
 \newcommand{\mcal}[1]{\mathcal{#1}}
 \newcommand{\bb}[1]{\mathbb{#1}}
 \newcommand{\opt}{\text{opt}}
+\newcommand{\sm}{\setminus}
 
 \title{COMP 251: Algorithms \& Data Structures}
 \author{Owen Lewis}
@@ -906,6 +907,20 @@ We have at most $n$ components. Finding the minimum cut $\de(S_i)$ takes at most
 \proo Let $e = (u, v)$ be the cheapest edge in a cut $\de(S)$. Let $T^*$ be a minimum spanning tree and assume $e \notin T^*$. Since $T^*$ is a spanning tree, there exists a unique path $P \subseteq T$ from $u$ to $v$. Note that if $\hat{e} \in P$ then $(T^* \setminus \hat{e})\cup e$ is still a spanning tree. Also note that in any walk from $u$ to $v$ we must cross the cut, so there exists at least one edge $\hat{e} \in P \cap \de(S)$. But $c_{\hat{e}}\ \gt\ c_e \imply (T^* \setminus \hat{e}) \cup e$ is a cheaper spanning tree than $T^*$, a contradiction.
 \qed\\\\
 Note that this property trivially proves that the above three algorithms are correct as they all look for the minimum cost edge in a cut, and the theorem implies that that minimum cost edge must be in the MST.
+\subsubsection{The Cycle Property of Minimum Spanning Trees}
+\thm (Cycle Property) Assume all edge costs of a graph are distinct. If $e$ is the most expensive edge in some cycle $C$ then $e$ is not in the minimum spanning tree.\\\\
+\proo Let $e =(u, v)$ be the most expensive edge in the cycle $C$. Since $C$ is a cycle, $P = C \setminus \{e\}$ is a path from $u$ to $v$. Assume for a contradiction that $e$ is in the minimum spanning tree $T^*$. Let $\de(S) = (S, V \setminus S)$ be the cut induced by $T^*\sm \{e\}$. Note that if $\hat{e} \in \de(S)$ then $(T^*\sm \{e\}) \cup \{\hat{e}\}$ is a spanning tree. Also note that there exists at least one edge $\hat{e} \in P \cap \de(S)$. Therefore, as $e$ is the most expensive edge in $C$ we have $c_{\hat{e}}\ \lt\ c_e$, however this implies that $(T^*\sm \{e\})\cup \{\hat{e}\}$ is a cheaper spanning tree than $T^*$, a contradiction.
+\qed
+\subsubsection{The Reverse Delete Algorithm}
+---------------------------------------------------------------------------------------------------------
+RevDel($G$)\\
+	\hspace*{7mm} sort the edges $\{e_1, e_2, \dots, e_m\}$ in increasing order by cost\\
+	\hspace*{7mm} for each $i \in \{m, m-1, \dots, 2, 1\}$\\
+	\hspace*{14mm} if $G \setminus \{e_i\}$ is connected\\
+	\hspace*{21mm} set $G \leftarrow G \setminus \{e_i\}$\\
+---------------------------------------------------------------------------------------------------------\\
+This algorithm has $m$ iterations. Checking whether the graph is connected can be done in $O(m)$ time using any graph search algorithm. Thus the running time is $O(m^2)$.\\\\
+The fact that this algorithm works follows directly from the cycle property.
 \subsection{Clustering}
 \subsection{Set Cover Problem}
 \subsection{Matroids}
