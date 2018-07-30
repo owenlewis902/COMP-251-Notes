@@ -922,7 +922,83 @@ RevDel($G$)\\
 This algorithm has $m$ iterations. Checking whether the graph is connected can be done in $O(m)$ time using any graph search algorithm. Thus the running time is $O(m^2)$.\\\\
 The fact that this algorithm works follows directly from the cycle property.
 \subsection{Clustering}
+Given a collection $\mcal{O}$ of objects, we want to partition it into a set of clusters $\{S_1, S_2, \dots, S_k\}$. The basic objective of a good clustering is that similar objects are placed into the same cluster, and dissimilar objects are placed into different clusters. We can represent the clustering problem by a weighted graph $G = (V, E)$ such that there is a vertex for each object in $\mcal{O}$, there is an edge between every pair of objects, and where the weight (or length) associated with the edge represents the dissimilarity between the two objects.
+\subsubsection{The Quality of a Clustering}
+Unfortunately, we can only give an informal definition of the quality of a clustering as it varies greatly depending on the application. In general though, with a clustering there will be an objective function that determines the quality.
+\subsubsection{The Maximum Space Clustering Problem}
+In the maximum space clustering problem we want to parition the set of objects into $k$ clusters (subsets), $\{S_1, S_2, \dots, S_k\}$, so that the minimum distance between any two of the $k$ subsets is maximized. We define the distance between two clusters as
+\[d(S_{\ell}, S_m) = \min_{i \in S_{\ell}, j\in S_m} d_{ij}\]
+Thus the objective function for the maximum space clustering problem is given by
+\[\max_{\mcal{S}} \min_{\ell, m} d(S_{\ell}, S_m) = \max_{\mcal{S}} \min_{\ell, m} \min_{i \in S_{\ell}, j \in S_m}\]
+It turns out that if we tweak the reverse-delete minimum spanning tree algorithm, we get an efficient algorithm to solve this clustering problem. The idea is that instead of disallowing an edge to be removed when the graph becomes disconnected, we remove edges until there are at most $k$ components. The pseudo-code for this algorithm then looks like this:\\\\
+---------------------------------------------------------------------------------------------------------
+RevDelCluster($G$)\\
+	\hspace*{7mm} sort the edges $\{e_1, e_2, \dots, e_m\}$ in increasing order by cost\\
+	\hspace*{7mm} for each $i \in \{m, m-1, \dots, 2, 1\}$\\
+	\hspace*{14mm} if $G \setminus \{e_i\}$ has $k$ components or less\\
+	\hspace*{21mm} set $G \leftarrow G \setminus \{e_i\}$\\
+	\hspace*{7mm} return the $k$ components of $G$\\
+---------------------------------------------------------------------------------------------------------\\
+Just like the reverse-delete algorithm for the minimum spanning tree problem, the time complexity for this algorithm is $O(m^2)$\\\\
+To prove that this algorithm is correct, we need some help from a couple of lemmas.\\\\
+\lem A connected graph contains a spanning tree as a subgraph.\\\\
+\proo This is a direct consequence of running breadth-first search. If a graph is connected then BFS discovers all vertices.
+\qed\\\\
+\lem If we remove an edge $e = (u, v)$ from a graph then the number of components increases by at most one.\\\\
+\proo As there exists an edge $e = (u, v)$, the vertices $u$, and $v$ are in the same component, say $S_1$. Since $S_1$ is a component, and therefore connected by definition, then by the previous lemma it contains a spanning tree $T$ as a subgraph. This leads to two cases:\\
+Case 1: $e \notin T$. Then after removing $e$, $S_1$ remains a component as it still contains the spanning tree $T$.\\
+Case 2: $e \in T$ for every spanning tree in $S_1$. Then since $T$ can't contain a cycle, removing $e$ partitions $T$ into exactly two components. Thus removing $e$ creates either zero additional components or one additional component.
+\qed\\\\
+Now that we have all the tools we need to prove the correctness of the algorithm, let's do it.\\\\
+\proo Let $e_{\ell}$ be the edge whose deletion causes the number of components to increase from $k-1$ to $k$. When we delete $e_{\ell}$ we obtain the clustering $\mcal{S} = \{S_1, S_2, \dots, S_k\}$. But this means that only the edges $\{e_m, e_{m-1}, \dots, e_{\ell}\}$ can cross between two different clusters in $\mcal{S}$. This implies that $e_{\ell}$ is the shortest edge between two clusters in $\mcal{S}$. Now we need to show that this is the best solution. Any cluster $\mcal{S}^* = \{S_1^*, S_2^*, \dots, S_k^*\}$ must separate the endpoints of at least one edge in $\{e_1, e_2, \dots, e_{\ell}\}$. But then the quality of $\mcal{S}^*$ is at most $d_{e_{\ell}}$ as all the other edges are cheaper. Thus the reverse delete clustering algorithm gives an optimal solution to the maximum space clustering problem.
+\qed
 \subsection{Set Cover Problem}
+Suppose we're given a groundset $I = \{i_1, i_2, \dots, i_n\}$ of items, and a collection of sets $\mcal{S} = \{S_1, S_2, \dots, S_m\}$  such that $S_i \subseteq I$, $\forall i \leq n$. We then want to select as few sets from $\mcal{S}$ as possible so that every element in $I$ is contained in at least one set. In other words we want to find the smallest cardinality subset of $\mcal{S}$ that covers the groundset. Here's a simple algorithm to do this:\\\\\\\\\\\\\\
+---------------------------------------------------------------------------------------------------------
+SetCover($\mcal{S}$, $I$)\\
+	\hspace*{7mm} while $I \neq \emp$\\
+	\hspace*{14mm} let $\hat{S}$ = arg$\ds\min_{S \in \mcal{S}}(|S \cap I|)$\\
+	\hspace*{14mm} set $S \leftarrow S\sm \{\hat{\mcal{S}}\}$
+	\hspace*{14mm} set $I \leftarrow I \sm \hat{\mcal{S}}$\\
+---------------------------------------------------------------------------------------------------------\\
+Does this algorithm work? Not really. Consider the example:\\\\
+\includegraphics[scale=0.4]{scce}\\
+The algorithm will select the blue sets $\{S_1, S_2, S_3, S_4\}$, even though the red sets $\{S_5, S_6, S_7\}$ are the optimal solution.
+\subsubsection{Approximation Algorithms}
+An algorithm $\mcal{A}$ is an \ti{approximation algorithm} if for any instance $I$, the following conditions hold.
+\begin{itemize}
+	\item The algorithm runs in polynomial time
+	\item The algorithm returns a feasible solution $\mcal{S}$
+	\item It gives the approximation guarantee: \[\text{cost}(\mcal{S}) \leq \al\x\opt\] i.e. the cost of the solution is within a factor $\al$ of the optimal solution.
+\end{itemize}
+The above set cover problem is an approximation algorithm . We want to now figure out what it's value of $\al$ is.\\\\
+\lem If the optimal set cover has cardinality $k$, then for any $X \subseteq I$  there exists an $\mcal{S}$ that covers at least $\ds\frac{1}{k}|X|$ items of $X$.\\\\
+\proo Let the optimal solution be $\{S_1^*, S_2^*, \dots, S_K^*\}$. Then that set covers every item in $I \imply$ it covers every item in $X$. As $X$ is covered by $k$ sets, there must be some set that covers at least $\ds\frac{1}{k}$ of $X$.
+\qed\\\\
+Note that this lemma proves that the above algorithm is approximately correct.\\\\
+\thm If the optimal set cover has cardinality $k$, then the greedy algorithm finds a solution of size at most $k\x \ln n$.\\\\
+\proo WLOG let the algorithm output $\{S_1, S_2 \dots, S_T\}$ and let the optimal solution be $\{S_1^*, S_2^*, \dots, S_k^*\}$. We want to show that $T \leq k\x \ln n$. Let $I_t$ be the set of uncovered items at the start of step $T$. Then $I = I_1$. Since $I_t \subseteq I$, by the above lemma there is a set that covers at least $\ds \frac{1}{k}|I_t|$ items in $I_t$. Therefore we have
+\begin{align*}
+|I_{t+1}| &\leq |I_t| - \frac{1}{k}|I_t|\\
+	&= \Big(1 - \frac{1}{k}\Big)|I_t|\\
+	&= \Big(1 - \frac{1}{k}\Big)\Big(1 - \frac{1}{k}\Big)|I_{t-1}|\\
+\intertext{doing this $t$ times, we get}
+	&= \Big(1-\frac{1}{k}\Big)^t|I_t|\\
+	&= \Big(1-\frac{1}{k}\Big)^tn
+\intertext{and thus we have an upper bound on $|I_{t+1}|$. But note that as $1-x\ \lt\ e^{-x}, \forall x \neq 0$,}
+	&\lt\ (e^{-1/k})^tn
+\intertext{setting $t = k\x \ln n$ gives us}
+	&= e^{\frac{-k\x\ln n}{k}}n\\
+	&= e^{-\ln n}\\
+	&= 1
+\end{align*}
+and thus $|I_{k\x \ln n +1}|\ \lt\ 1$. But note that since we're dealing with integers, then if the cardinality of $I_{k\x \ln n +1}$ is less than one then it's zero, which is when the algorithm terminates. Thus the algorithm will terminate on or before step $k\x \ln n$.
+\qed\\\\
+\cor The above greedy algorithm is a $\log n$ approximation for the set cover problem.\\\\
+This doesn't really seem to be a great approximation guarantee as $\log n$ is unbounded, however the following theorem say that it's probably they best we'll get.\\\\
+\thm There is no approximation algorithm for the set cover problem with guarantee $(1 - o(1))\x \log n$, unless P = NP.\\\\
+The proof for this theorem is way beyond the scope of this course.\\\\
+This algorithm has at most $n$ iterations with at most $n$ coverage updates at each step. Thus the running time is $O(n^2)$.
 \subsection{Matroids}
 \newpage
 
