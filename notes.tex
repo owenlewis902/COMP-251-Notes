@@ -1075,7 +1075,54 @@ Thus the algorithm output a lower-weight solution than the optimal and hence fai
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Dynamic Programming}
+\hspace*{10mm}``I spent the Fall quarter [of 1950] at RAND. My first task was to find a name for multistage decision processes. An interesting question is, `Where did the name, dynamic programming, come from?' The 1950s were not good years for mathematical research. We had a very interesting gentleman in Washington named Wilson. He was Secretary of Defense, and he actually had a pathological fear and hatred of the word, research. I'm not using the term lightly; I'm using it precisely. His face would suffuse, he would turn red, and he would get violent if people used the term `research' in his presence. You can imagine how he felt, then, about the term `mathematical'. The RAND Corporation was employed by the Air Force, and the Air Force had Wilson as its boss, essentially. Hence, I felt I had to do something to shield Wilson and the Air Force from the fact that I was really doing mathematics inside the RAND Corporation. What title, what name, could I choose? In the first place I was interested in planning, in decision making, in thinking. But planning, is not a good word for various reasons. I decided therefore to use the word, `programming.' I wanted to get across the idea that this was dynamic, this was multistage, this was time-varying --- I thought, let's kill two birds with one stone. Let's take a word that has an absolutely precise meaning, namely dynamic, in the classical physical sense. It also has a very interesting property as an adjective, and that is it's impossible to use the word, dynamic, in a pejorative sense. Try thinking of some combination that will possibly give it a pejorative meaning. It's impossible. Thus, I thought dynamic programming was a good name. It was something not even a Congressman could object to. So I used it as an umbrella for my activities''\\\\
+-- Richard Bellman, 1984, on the origins of the term `dynamic programming'
 \subsection{Fibonacci Numbers}
+Recall that the Fibonacci Numbers are defined by
+\[f(0) = 1,\ f(1) = 1,\ f(n) = f(n-1) + f(n-2),\ \forall n \geq 2\]
+We can solve recurrence relation to obtain a closed form equation given by
+\[f(n) = \frac{1}{\sqrt{5}}\Bigg(\bigg(\frac{1+\sqrt{5}}{2}\bigg)^2 - \bigg(\frac{1-\sqrt{5}}{2}\bigg)^2\Bigg) = \Theta(1.618^n)\]
+Using the recursion tree method we get that $f(n) = \Omega\big(\sqrt{2}^n\big)$. Well that's atrocious.\\\\
+One way to improve on this is to just store data. Indeed storing data is the underlying idea behind dynamic programming. There are two basic approaches for implementing dynamic programming.
+\begin{enumerate}
+	\item Top-down (memoization)
+	\item Bottom-up
+\end{enumerate}
+\subsubsection{Top-Down}
+The best way to explain both this approach and bottom-up is by illustrating them through an example -- the Fibonacci numbers. Consider the algorithm:\\\\
+---------------------------------------------------------------------------------------------------------
+FibMemo($f(n)$)\\
+	\hspace*{7mm} if $n \leq 1$\\
+	\hspace*{14mm} return 1\\
+	\hspace*{7mm} else\\
+	\hspace*{14mm} if $f(n)$ is undefined\\
+	\hspace*{21mm} set $f(n) \leftarrow$ FibMemo($f(n-1)$) + FibMemo($f(n-2)$)\\
+---------------------------------------------------------------------------------------------------------\\
+Note that this is similar to DFS insofar as we dive down to solve the base cases and then we work our way back up the tree.\\\\
+This takes $n-1$ additions, where in each iteration we add two numbers. Adding two $n$-bit numbers takes $O(n)$ time. Thus the running time for this algorithm is $O(n^2)$. That's waaay better than that monster we had originally.
+\subsubsection{Bottom-Up}
+In fact there is an even simpler way to solve this problem using the bottom-up approach. Consider the following algorithm:\\\\
+---------------------------------------------------------------------------------------------------------
+FibB-up($f(n)$)\\
+	\hspace*{7mm} set $f(0) \leftarrow 1$\\
+	\hspace*{7mm} set $f(1) \leftarrow 1$\\
+	\hspace*{7mm} for $i \in \{2, 3, \dots, n\}$\\
+	\hspace*{14mm} set $f(n) \leftarrow f(n-1) + f(n-2)$\\
+	\hspace*{7mm} return $f(n)$\\
+---------------------------------------------------------------------------------------------------------
+\subsubsection{Top-Down versus Bottom-Up}
+Top-down is generally faster because it solves only the sub-problems that need to be solved. Bottom-up, however, is generally cleaner and conceptually simpler.
+\subsubsection{Dynamic Programming vs. Divide and Conquer}
+Dynamic programming is very similar to divide and conquer as in both methods, we're dividing a problem$\cal P$ into $k$ sub-problems $\mcal{Q}_1, \mcal{Q}_2, \dots, \mcal{Q}_k$, and combining them for a final answer. The difference, however, is that in divide and conquer, the sub-problems must be completely disjoint, where in dynamic programming, they're allowed to overlap. Specifically, $\mcal{Q}_1$, and $\mcal{Q}_2$ may share some common sub-sub-problem $\hat{\mcal{Q}}$.
+\subsubsection{What's Needed for Dynamic Programming?}
+To solve a dynamic program we need the following properties to hold:
+\begin{itemize}
+	\item The solution $\mcal{P}$ must be computable using the set of sub-problems $\mcal{Q}_1, \mcal{Q}_2, \dots, \mcal{Q}_k$
+	\item We should have a natural ordering of the sub-problems from smallest to largest
+	\item We should have a polynomial number of sub-problems
+	\item We want a recurrence giving the solution to $\mcal{P}$ in terms of the solution to $\mcal{Q}_1, \mcal{Q}_2, \dots, \mcal{Q}_k$
+\end{itemize}
+If the above conditions hold, then the running time of a dynamic program is equal to the number of sub-problems multiplied by the time required to use the recursive formula at each step.
 \subsection{The (Weighted) Interval Selection Problem}
 \subsection{Knapsack Problem}
 \subsection{Humpty Dumpty Problem}
