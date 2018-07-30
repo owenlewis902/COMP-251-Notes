@@ -1000,6 +1000,72 @@ This doesn't really seem to be a great approximation guarantee as $\log n$ is un
 The proof for this theorem is way beyond the scope of this course.\\\\
 This algorithm has at most $n$ iterations with at most $n$ coverage updates at each step. Thus the running time is $O(n^2)$.
 \subsection{Matroids}
+\subsubsection{The Generic Greedy Problem}
+Suppose we're given a set $E$ of elements each with a non-negative weight $w_e$, and a collection $\mcal{F}$ of feasible sets where each $F \in \mcal{F}$ is a valid solution to some problem. The weight of a set $F$ is defined by
+\[w(F) = \sum_{e \in F} w_e\]
+Our problem is to find a feasible set with the maximum possible weight.
+\subsubsection{The Hereditary Property}
+A collection of feasible sets is said to satisfy the hereditary property if
+\[F \in \mcal{F} \imply \hat{F} \in \mcal{F},\ \forall \hat{F} \subseteq F\]
+\subsubsection{The Greediest Algorithm}
+A generic algorithm to solve the generic greedy problem for sine hereditary system is:\\\\
+---------------------------------------------------------------------------------------------------------
+Greediest($E$)\\
+	\hspace*{7mm} sort the elements by weight\\
+	\hspace*{7mm} set $T : = \emp$\\
+	\hspace*{7mm} for each $i \in \{1, 2, \dots, m\}$\\
+	\hspace*{14mm} if $T \cup e_i \in \mcal{F}$\\
+	\hspace*{21mm} set $T \leftarrow T \cup e_i$\\
+---------------------------------------------------------------------------------------------------------\\
+This involves sorting elements which takes $O(m \log m)$ time. We have $m$ iterations where we can test for feasibility in time $t$. Therefore, the running time for the greediest algorithm is $O(m \log m + mt)$. Thus this algorithm is efficient as long as $t$ is polynomial.\\\\
+So does this algorithm work? Well it works for the minimum spanning tree problem as it's exactly Kruskal's algorithm. Note however that it doesn't work with the weighted interval selection problem. Consider the example:\\\\
+\includegraphics[scale=0.315]{gace}\\
+The greediest algorithm would choose the one interval with weight 100 when the two intervals with weight 99 are the optimal solution.\\\\
+A natural question then is when does this algorithm work? What is it about the structure of the MST problem but not the weighted interval selection problem that makes the greediest algorithm work? Spoilers it's a matroid. First though we need to look at something called the augmentation property.
+\subsubsection{The Augmentation Property}
+$\mcal{F}$ is said to satisfy the augmentation property if when
+\[F, \hat{F} \in \mcal{F}, \text{ with } |F|\ \gt\ |\hat{F}| \text{ then } \exists e \in F \setminus \hat{F}, \text{ such that } \hat{F} \cup \{e\} \in \mcal{F}\]
+in other words given two feasible sets with one being strictly larger than the other in cardinality, then we can remove one element from the larger set and add it to the smaller set while maintaining feasiblilty of the smaller set.
+\subsubsection{Matroids}
+A matroid $M = (E, \mcal{F})$ is a non-empty set system that satisfies both the herediraty property and the augmentation property. Note that having the hereditary property and non-emptiness implies $\emp \in \mcal{F}$.\\\\
+Some matroids include
+\begin{itemize}
+	\item Graphical Matroids:
+	\begin{itemize}
+		\item $E$ is the edges in a set
+		\item $F \in \mcal{F}$ if $F$ is a forrest
+	\end{itemize}
+	\item Linear Matroids:
+	\begin{itemize}
+		\item $E$ is a finite set of vectors
+		\item $F$ is a collection of linearly independent vectors
+	\end{itemize}
+	\item Transversal Matroids:
+	\begin{itemize}
+		\item $E$ is the set of leaf vertices in a bipartite graph
+		\item $F \in \mcal{F}$ if there is a matching in the graph that matches each vertex in $F$ to another distinct vertex on the right
+	\end{itemize}
+\end{itemize}
+\ \\
+\thm A hereditary non-empty set system is a matroid if and only if the greediest algorithm outputs the optimal solution in $M$ for any set of weights $W$.\\\\
+\proo ($\imply$) First let's show that the greediest algorithm always works on matroids. Suppose the algorithm outputs $\{e_1, e_2, \dots, e_{\ell}\}$ where $w(e_1) \geq w(e_2) \geq \dots \geq w(e_{\ell})$. Let the optimal solution be $\{e_1^*, e_2^*, \dots, e_k^*\}$ where $w(e_1^*) \geq w(e_2^*) \geq \dots \geq w(e_k^*)$. By the augmentation property, we have that $\ell \geq k$. We claim that $w(e_i) \geq w(e_i^*)$ for each $1 \leq i \leq \ell$. Assume the contrary. Let $j$ be the smallest index with $w(e_j)\ \lt\ w(e_j^*)$. Now consider the sets $F = \{e_1, e_2, \dots, e_{j-1}\}$, and $\hat{F} = \{e_1^*, e_2^*, \dots, e_j^*\}$. By the augmentation property $\exists e_i^* \in F$ such that $\hat{F} \cup e_i \in \mcal{F}$. But $w(e_i^*) \geq w(e_j^*)\ \gt\ w(e_j)$, a contradiction as the greediest algorithm should have chosen $e_i^*$ at step $j$ instead of $e_j$.\\
+($\limply$) Now take a hereditary set system $M$ that's not a matroid. Then $\exists F, \hat{F} \in \mcal{F}$ with $|F|\ \gt\ |\hat{F}|$, but $\nexists e \in F \sm \hat{F}$ such that $\hat{F} \cup \{e\} \in \mcal{F}$. Let $\ep\ \gt\ 0$ then consider the following collection of weights that we claim will cause the algorithm to fail.
+\[ w(e) =
+\begin{cases}
+	2 &\text{ if } e \in F \cap \hat{F}\\
+	1 + \ep &\text{ if } e \in \hat{F} \sm F\\
+	1 &\text{ if } e \in F \sm \hat{F}\\
+	0 &\text{ if } e \notin F \cup \hat{F}\\
+\end{cases}
+\]
+As the algorithm runs it first selects the elements in $F \cap \hat{F}$. Then it selects all the elements in $\hat{F} \sm F$. Finally it selects some elements in $E \sm (F\cup\hat{F})$. Therefore the algorithm outputs a solution with weight
+\begin{align*}
+2\x |F \cap \hat{F}| + (1 + \ep)\x|\hat{F}\sm F| + 0 &= 2\x |F \cap \hat{F}| + (1 + \ep)\x|\hat{F}\sm F|\\
+	&\lt\ 2\x |F \cap \hat{F}| + (1)\x|\hat{F}\sm F|\\
+	&= \opt
+\end{align*}
+Thus the algorithm output a lower-weight solution than the optimal and hence failed with these weights.
+\qed 
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
