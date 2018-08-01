@@ -33,6 +33,7 @@
 \newcommand{\sg}{\sigma}
 \newcommand{\be}{\beta}
 \newcommand{\de}{\delta}
+\newcommand{\ka}{\kappa}
 \newcommand{\prop}{\textbf{Proposition: }}
 \newcommand{\thm}{\textbf{Theorem: }}
 \newcommand{\lem}{\textbf{Lemma: }}
@@ -1197,7 +1198,60 @@ The input is $\{x_1, x_2, \dots, x_n\}$, and the sub-problems are of the form $[
 \subsubsection{Tree Structure}
 The input is a rooted tree with vertex set $\{x_1, x_2, \dots, x_n\}$ and the sub-problem $[j]$ is given by the subtree rooted at $x_j$. The subproblems are ordered by $[i] \preceq [j]$ if and only if $x_i$ is a descendant of $x_j$. The independent set on a tree problem is an example of a problem employing this structure.
 \subsection{Knapsack Problem}
+Suppose a theif has a bag with capacity $W$, and suppose there are $n$ elements to steal. Item $i$ has value $v_i$, and weight/size $w_i$. The theif wants to steal the subset of items with the maximum total value that fits into the knapsack. This problem has the box structure, where the first dimension represents the items, and where the second dimension represents the weight. To understand this structure in more detail, we must ask ourselves the same two questions as from the weighted interval selection problem:
+\begin{enumerate}
+	\item What happens if the algorithm selects item $n$?
+	\begin{itemize}
+		\item The remaining capacity of the bag is $W - w_i$
+		\item The set of remaining items is $\{1, 2, \dots, n-1\}$
+	\end{itemize}
+	\item What happens if the algorithm doesn't select item $n$?
+	\begin{itemize}
+		\item The remaining capacity of the bag is $W$
+		\item The set of remaining items is $\{1, 2, \dots, n-1\}$
+	\end{itemize}
+\end{enumerate}
+From these, we can deduce that the recurrence relation for this problem is given by
+\[\opt(j, w) = \max\{\opt(j-1, w),\ v_j + \opt(j-1, W-w_i)\}\ \forall j \geq 1,\ \forall w \leq W\]
+with base cases $\opt(j, w) = 0$ if $j=0$ or $w \leq 0$.\\\\
+Much like the weighted interval selection problem, simply solving this recurrence is far too slow. Let's try solving it using a dynamic program.\\\\
+---------------------------------------------------------------------------------------------------------
+Knapsack($I, W$)\\
+	\hspace*{7mm} set $\opt(0, w) := 0$, $\forall w \leq W$\\
+	\hspace*{7mm} set $\opt(j, w) : = 0$, $\forall j$, and $\forall w \leq 0$\\
+	\hspace*{7mm} for each $j \in \{1, 2, \dots, n\}$\\
+	\hspace*{14mm} for each $w \in \{1, 2, \dots, W\}$\\
+	\hspace*{21mm} set $\opt(j, w) = \max\{\opt(j-1, w),\ v_j + \opt(j-1, W-w_i)\}$\\
+	\hspace*{7mm} return $\opt(n, W)$\\
+---------------------------------------------------------------------------------------------------------\\
+There are $2n\x W$ subproblems, thus the running time is $O(nW)$. Note that this is only a pseudo-polynomial time algorithm. It is not truly polynomial as if the integers have $b$ bits, then $W$ could be $2^b$. Indeed, for a polynomial time algorithm we really want it to be either:
+\begin{itemize}
+	\item Wealky polynomial: The algorithm runs in time poly($n, b$)
+	\item Strongly polynomial: The algorithm runs in time poly($n$)
+\end{itemize}
+If $W$ is small, then this won't cause huge problems for us, however.\\\\
+Unfortunately, we don't think that there actually is a polynomial time algorithm to solve this problem, unless of course P=NP.
 \subsection{Humpty Dumpty Problem}
+Suppose we have a $T$-storey skyscraper and $k$ identical eggs. We want to find the highest storey from which we can drop an egg without it breaking, whilst using the fewest number of eggs as possible.\\\\
+Our first intuition may be to just start on the lowest floor and keep moving up if the egg doesn't break. The requires $O(T)$ tests. Let's try to do better.\\\\
+Next we may try using binary search. This is a little better as it requires only $O(\log n)$ tests, but this still may fail as it's possible that $k \ll \log T$.\\\\
+Let's try a dynamic programming approach. We have two parameters: the number of eggs, and the number of (remaining) stories. Let $d(T, k)$ be the number of egg drops required to guarantee that we can successfully drop an egg safely. Like always, we first have to look at the structure. If the egg breaks, then the answer is in the range $\{0, 1, \dots, t-1\}$, but then we only have $k-1$ eggs remaining. Therefore, the number of drops is less than or equal to $1 + d(t-1, k-1)$. Similarily, if the egg doesn't break, then the answer is in the range $\{t, \dots, T-1, T\}$, but then we still have $k$ eggs. Thus the number of drops is at most $1 + d(T-t, k)$. From this we can derive our recursive formula as
+\[d(T, k) = 1 + \min_{t : 1\leq t \leq T}\{\max\{d(t-1, k-1),\ d(T-t, k)\}\}\]
+with base cases given by $d(\tau, 1) = \tau$, $\forall \tau \geq 1$, and $d(0, \ka) = 0$, $\forall \ka$. Filling this into a dynamic program gives us the following algorithm.\\\\
+---------------------------------------------------------------------------------------------------------
+HumptyDumpty($T, k$)\\
+	\hspace*{7mm} set $d(\tau, 1) = \tau$, $\forall \tau \geq 1$\\
+	\hspace*{7mm} set $d(0, \ka) = 0$, $\forall \ka$\\
+	\hspace*{7mm} for each $\tau \in \{1, 2, \dots, T\}$\\
+	\hspace*{14mm} for each $\ka \in \{1, 2, \dots, k\}$\\
+	\hspace*{21mm} set $\ds \d(\tau, \ka) = 1 + \min_{t : 1\leq t \leq T}\{\max\{d(t-1, k-1),\ d(T-t, k)\}\}$\\
+	\hspace*{21mm} if $d(\tau, \ka) = 1 + d(t-1, k-1)$\\
+	\hspace*{28mm} set $p([\tau, \ka]) \leq [t-1, \ka-1]$\\
+	\hspace*{21mm} else\\
+	\hspace*{28mm} set $p([\tau, \ka]) \leq [\tau-1, \ka]$\\
+	\hspace*{7mm} return $d(\tau, \ka)$\\
+---------------------------------------------------------------------------------------------------------\\
+There are $Tk$ subproblems. To solve each subproblem, we need to look at $2T$ smaller problems. Thus the time complxity is $O(T^2k)$, which is polynomial time.
 \subsection{Bellman-Ford Algorithm}
 \subsection{RNA Secondary Structure}
 \subsection{Sequence Alignment}
