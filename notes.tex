@@ -1124,6 +1124,78 @@ To solve a dynamic program we need the following properties to hold:
 \end{itemize}
 If the above conditions hold, then the running time of a dynamic program is equal to the number of sub-problems multiplied by the time required to use the recursive formula at each step.
 \subsection{The (Weighted) Interval Selection Problem}
+Suppose we have a set $I$ of $n$ intervals, each with a start time $s_i$, and with a finish time $f_i$. Now suppose that each interval has an associated weight $v_i$. Our goal is to find a set $S$ of disjoint intervals with the maximum total weight
+\[w(S) = \max\sum_{i \in S} v_i\]
+To try a dynamic programming approach, first we need to define the sub-problems. The key issue to define them with a natural ordering. We have $n$ objects $[n] = \{1, 2, \dots, n\}$. Our trick will be to define a subproblem $[\ell]$ as $[\ell] = \{1, 2, \dots, \ell\}$. The (sub)-problem $[\ell]$ is then to find the maximum value disjoint set of intervals when we can only use the intervals in $\{1, 2, \dots, \ell\}$. Thus we have the natural ordering
+\[[1] \prec [2] \prec \dots \prec [n]\]
+Note that we still have the flexibility to change the labels of the intervals. Like in the greedy interval selection problem, let's order the intervals by finish time so that
+\[f_1 \leq f_2 \leq \dots \leq f_n\]
+This is a good choice of an ordering because it works. The key to figuring out why, however, is to look at the structure of the problem. To do this, we consider two questions (that we'll ask ourselves in every dynamic programming from now on:)
+\begin{enumerate}
+	\item What happens if the algorithm selects $n$?
+	\item What happens if the algorithm doesn't select $n$?
+\end{enumerate}
+First consider the picture to give some motivation for the following lemmas:
+\includegraphics[scale=0.475]{ints1}
+\lem Take any interval $i$ that finishes after the start of an interval $n$. Then if we select interval $n$ we cannot select interval $i$.\\\\
+\proo Interval $n$ is the last interval $f_j \leq f_n$. But by assumption, $s_n\ \lt\ f_j \imply s_n\ \lt\ f_j \leq f_n \imply$ interval $j$, and interval $n$ clash at time $f_j - \ep$ for some $\ep\ \gt\ 0$. Since they clash, we can't choose both.
+\qed\\\\
+\lem The intervals that clash with interval $n$ are consecutive.\\\\
+\proo Let $\ell$ be the lowest index interval with $f_{\ell}\ \gt\ s_n$. Then by the first lemma, interval $\ell$ clashes with interval $n$. But for any interval $i\ \gt\ \ell$, we have that $f_i \geq f_{\ell}$ by the ordering criteria $\imply f_i\ \gt\ s_n \imply$ interval $i$ also clashes with interval $n$. Thus all intervals $\{\ell, \ell +1, \dots, n-1\}$ clash with $n$. Conversely, no interval $i$ with index $i\ \lt\ \ell$ clashes with interval $n$, as $s_i\ \lt\ f_i \leq s_n\ \lt\ t_n \imply$ interval $i$ is disjoint from interval $n$. Thus the interval $n$ clashes exactly with the set $\{\ell, \ell + 1, \dots, n-1\}$.
+\qed\\\\
+From these two lemmas, it's natural define some notation for the highest index interval that's disjoint from an interval $n$. Let $h(n)$ be such an interval. Thus by the above lemmas if we select an interval $n$, the set of intervals $\{h(n)+1 , h(n)+2, \dots, n-1\}$ becomes infeasible.\\\\
+Now we have what we need to proceed to answer the two questions from earlier. If the algorithm selects the interval $n$, it should also select the optimal solution for the subproblem consisting of intervals from the set $\{1, 2, \dots, h(n)\}$. If the algorithm doesn't select $n$, then it should simply select an optimal solution for the subproblem consisting of the intervals from the set $\{1, 2, \dots, n-1\}$. Now that we've got this structure, we can recurse to find the optimal solution, by using the recursive formula given by
+\[\opt(j) = \max\{\opt(j-1), v_j + \opt(h(j))\},\ \forall j \geq 1\]
+with the base case given by $\opt(0) = 0$.\\\\
+Recall that in the same way that solving the Fibonacci numbers recursively, it's really bad (exponential time) to solve this recursively, unless we store some data, i.e. unless we use a dynamic program. Consider the algorithm:\\\\
+---------------------------------------------------------------------------------------------------------
+WIntSelect($I$)\\
+	\hspace*{7mm} sort the intervals by finish time\\
+	\hspace*{7mm} set $\opt(0) := 0$\\
+	\hspace*{7mm} for each $j \in \{1, 2, \dots, n\}$\\
+	\hspace*{14mm} let $h(j)\ \lt\ j$ be the highest index interval disjoint from $j$\\
+	\hspace*{14mm} set $\opt(j) = \max\{\opt(j-1), v_j + \opt(h(j))\}$\\
+	\hspace*{7mm} return $\opt(n)$\\
+---------------------------------------------------------------------------------------------------------\\
+But note that this dynamic program only gives the value of the weight of the optimal solution, not the actual set of intervals. We can fix this by adding some pointers to the algorithm. Namely, we'll change this algorithm to be\\\\\\\\\\\\\\\\\\\\\\\\\\
+---------------------------------------------------------------------------------------------------------
+WIntSelect($I$)\\
+	\hspace*{7mm} sort the intervals by finish time\\
+	\hspace*{7mm} set $\opt(0) := 0$\\
+	\hspace*{7mm} for each $j \in \{1, 2, \dots, n\}$\\
+	\hspace*{14mm} let $h(j)\ \lt\ j$ be the highest index interval disjoint from $j$\\
+	\hspace*{14mm} set $\opt(j) = \max\{\opt(j-1), v_j + \opt(h(j))\}$\\
+	\hspace*{14mm} if $\opt(j) = \opt(j-1)$\\
+	\hspace*{21mm} $set p(j) \leftarrow j-1$\\
+	\hspace*{14mm} else\\
+	\hspace*{21mm} set $p(j) \leftarrow h(j)$\\
+	\hspace*{7mm} return $\opt(n)$\\
+---------------------------------------------------------------------------------------------------------\\
+Once we have the optimal solution, we can just follow the pointers back to recover the optimal solution set.\\\\
+This algorithm breaks the problem into two subproblems, each taking $O(n)$ time to complete. Thus the total running time of the algorithm is $O(n)$.
+\subsection{More on the Structure of a Dynamic Program}
+The four steps to a dynamic program are:
+\begin{enumerate}
+	\item \tb{Structure:} Understand the structure of the underlying problem
+	\item \tb{Recursion:} Use the structure of the problem to formulate a recurrence
+	\item \tb{Optimal Value:} Solve the recursion through a (bottom-up) dynamic program
+	\item \tb{Solution Recovery:} Follow the pointers backwards to recover the optimal solution
+\end{enumerate}
+Understanding the structure is both the most important step, and the hardest step to solve. Luckily for us, the structure of a dynamic program falls into one of four cases:
+\begin{enumerate}
+	\item One-Sided Interval
+	\item Box Structure
+	\item Two-Sided Interval
+	\item Tree Structure
+\end{enumerate}
+\subsubsection{One-Sided Interval}
+The input is $\{x_1, x_2, \dots, x_n\}$, and the sub-problems are of the form $[j] = \{x_1, x_2, \dots, x_j\}$. The subproblems are ordered according to the rule $[i] \preceq [j]$ if and only if $i \leq j$. An example is the weighted interval selection problem that we've already seen.
+\subsubsection{Box Structure}
+The input is $\{x_1, x_2, \dots, x_n\}$, and $\{y_1, y_2, \dots, y_m\}$. The sub-problems are of the form $[i, j] = \{x_1, x_2, \dots, x_i, y_1, y_2, \dots, y_j\}$. The subproblems are ordered according to the rule $[i, j] \preceq [k, \ell]$ if and only if $i \leq k$, and $j \leq \ell$. Some examples of dynamic programs with the box structure are the knapsack problem, and the Humpty-Dumpty problem.
+\subsubsection{Two-Sided Interval}
+The input is $\{x_1, x_2, \dots, x_n\}$, and the sub-problems are of the form $[i, j] = \{x_i, x_{1+1}, \dots, x_j\}$. The subproblems are ordered according to the rule $[i, j] \preceq [k, \ell]$ if and only if $k \leq i$, and $j \leq \ell$. An example is the weighted interval selection problem is the RNA secondary structure problem.
+\subsubsection{Tree Structure}
+The input is a rooted tree with vertex set $\{x_1, x_2, \dots, x_n\}$ and the sub-problem $[j]$ is given by the subtree rooted at $x_j$. The subproblems are ordered by $[i] \preceq [j]$ if and only if $x_i$ is a descendant of $x_j$. The independent set on a tree problem is an example of a problem employing this structure.
 \subsection{Knapsack Problem}
 \subsection{Humpty Dumpty Problem}
 \subsection{Bellman-Ford Algorithm}
