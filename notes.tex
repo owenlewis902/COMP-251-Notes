@@ -1310,8 +1310,41 @@ Given a set $\mcal{P} = \{P_1, P_2, \dots, P_n\}$ of shortest paths in a graph, 
 \end{align*}
 ($\imply$) If $\mcal{P}$ contains the shortest paths, then $d(s) = 0$. Moreover, we must have $d(v) \leq d(u) + \ell_{uv}$, or else we can find shorter paths from $u$ to $v$.
 \qed
-\subsection{Sequence Alignment}
 \subsection{All-Pairs Shortest Paths}
+Given a directed graph $G = (V, A)$ with arc lengths $\ell_a$, we want to find the shortest path between every pair of vertices. We will assume that there are no negative cycles in $G$ (if there were then we could just run Bellman-Ford $n$ times starting from a different vertex each time. This would take $O(n^4)$, or with a more nuanced analysis $O(n^2m)$, which kinda sucks but it does the trick.) Indeed, the algorithm that we'll derive to do this is called the Floyd-Warsahll algorithm.\\\\
+First, we order the vertices in some arbitrary order $\{1, 2, \dots, n\}$. Then we create a sub-problem for each tripple of vertices $\{u, v, k\}$. Here, $\opt(u, v, k)$ is the shortest path from $u$ to $v$ using only the vertices $\{1, 2, \dots, k\}$ internally on the path.\\\\
+Then, we'll take the optimal path $\mcal{P}$ for $\opt(u, v, k)$.
+\begin{enumerate}
+	\item What happens if $k \in \mcal{P}$?
+	\begin{itemize}
+		\item Then $\opt(u, v, k) = \opt(u, v, k-1)$.
+	\end{itemize}
+	\item What happens if $k \notin \mcal{P}$?
+	\begin{itemize}
+		\item Then $\opt(u, v, k) = \opt(u, k, k-1) + \opt(k, v, k-1)$.
+	\end{itemize}
+\end{enumerate}
+This has npt just a box structure, but a 3D box structure. We can then solve this by a recurrence. Our recursive formula is
+\[\opt(u, v, k) = \min\{\opt(u, v, k-1),\ \opt(u, k, k-1),\ \opt(k, v, k-1)\}\]
+$\forall u, \forall v, \forall k \geq 1$, and with base cases given by
+\[\opt(u, v, 0) =
+\begin{cases}
+	0 &\text{ if } u = v\\
+	\ell_{uv} &\text{ if } (u, v) \in A\\
+	\infty &\text{ if } (u, v) \notin A\\
+\end{cases}\]
+Let's now write a dynamic program to solve this problem.\\\\
+---------------------------------------------------------------------------------------------------------
+FloydWarshall($G$)\\
+	\hspace*{4mm} set $\opt(u, v, 0) = 0$, $\forall v \in V$\\
+	\hspace*{4mm} set $\opt(u, v, 0) = \ell_{uv}$, $\forall (u, v) \in A$\\
+	\hspace*{4mm} set $\opt(u, v, 0) = \infty$, $\forall (u, v) \notin A$\\
+	\hspace*{4mm} for each $k \in \{1, 2, \dots, n\}$\\
+	\hspace*{8mm} for each $u \in \{1, 2, \dots, n\}$\\
+	\hspace*{12mm} for each $v \in \{1, 2, \dots n\}$\\
+	\hspace*{16mm} set $\opt(u, v, k) = \min\{\opt(u, v, k-1),\ \opt(u, k, k-1),\ \opt(k, v, k-1)\}$\\
+---------------------------------------------------------------------------------------------------------\\
+There are $n^3$ subproblems that each contain 3 smaller problems. Thus the running time is $O(n^3)$.
 \subsection{Independent Set on a Tree}
 \newpage
 
