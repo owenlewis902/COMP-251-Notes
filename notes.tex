@@ -1252,8 +1252,64 @@ HumptyDumpty($T, k$)\\
 	\hspace*{7mm} return $d(\tau, \ka)$\\
 ---------------------------------------------------------------------------------------------------------\\
 There are $Tk$ subproblems. To solve each subproblem, we need to look at $2T$ smaller problems. Thus the time complxity is $O(T^2k)$, which is polynomial time.
-\subsection{Bellman-Ford Algorithm}
-\subsection{RNA Secondary Structure}
+\subsection{The Bellman-Ford Algorithm}
+Recall the shortest path problem from when we looked at Dijkstra's algorithm. Recall that Dijkstra's fails on negative edge lengths. Sometimes, however, we come across negative edges in applications (for example in some finatial network we can have negative costs versus positive profits.) Therefore we need to come up with an algorithm that won't break when it encounters negative edges.\\\\
+One's first intuition may be to just change the graph into an instance of the graph without negative edges, perhaps by setting the negative edges all to 0. We note right away that that intuition is garbage because the shortest paths can change. Let's think about this a bit more. If we have negative arc lengths, then it's certainly possible that we also have negative length cycles. Thus, if we have no negative cycles, the shortest walk in the graph has the same length as the sortest path, however if we do have negative cycles, then the shortest walk can be shorter than the shortest path. For now, let's assume no negative cycles. Then, as it turns out, we can find the shortest path using dynamic programming. Indeed, for every vertex $v$, we can find the shortest path from $s$ to $v$, using at most $k$ arcs, where we have to solve this $n-1$ times, as each vertex has $k = n-1$ arcs.\\\\
+This problem has the box structure, where the first parameter is the vertices, and the second parameter is the number of arcs in the path.
+\begin{enumerate}
+	\item What happens if the shortest path to $v$ has fewer than $k$ arcs?
+	\begin{itemize}
+		\item The shortest path to $v$ with fewer than $k$ arcs has at most $k-1$ arcs.
+	\end{itemize}
+	\item What happens if the shortest path to $v$ has exactly $k$ arcs?
+	\begin{itemize}
+		\item The shortest path to $v$ with at most $k$ arcs consists of a shortest path to an in-neghbour $u$ of $v$ with at most $k-1$ arcs plus the arc $(u, v)$.
+	\end{itemize}
+\end{enumerate}
+From the above thought experiment, we can derive our recursive formula
+\[\opt(k, v) = \min\Big\{\opt(k-1, v),\ \min_{u \in \Ga^-(v)} \opt(k-1, u) + \ell_{uv}\Big\}\]
+with base cases given by $\opt(0, s) = 0$, and $\opt(0, v) = \infty\ \forall v \neq s$.\\\\
+We can now use this recursive formula to write our dynamic program.\\\\
+---------------------------------------------------------------------------------------------------------
+BellmanFord($G, s$)\\
+	\hspace*{7mm} set $\opt(0, s) := 0$\\
+	\hspace*{7mm} set $\opt(0, v) := \infty$\\
+	\hspace*{7mm} for each $k \in \{1, 2, \dots, n-1\}$\\
+	\hspace*{14mm} for each $v \in V$\\
+	\hspace*{21mm} set $\opt(k, v) = \min\Big\{\opt(k-1, v),\ \min_{u \in \Ga^-(v)} \opt(k-1, u) + \ell_{uv}\Big\}$\\
+	\hspace*{7mm} for each $v \in V$\\
+	\hspace*{14mm} return $\opt(n-1, v)$\\
+---------------------------------------------------------------------------------------------------------\\
+There are $n^2$ subproblems in which we solve $n$ smaller problems. Thus with this crude analysis the running time is $O(n^3)$. Using a more nuanced analysis we have that the running time is $O(mn)$.
+\subsubsection{Negative Cycle Detection}
+Recall that in the above, we assumed no negative cycles. But what if the graph contais negative cycles? Well it turns out that the Bellman-Ford algorithm doubles as a negative cycle-detector. Thus to find negative cycles, we just have to run the algorithm again. To see why this works, we need some help from some lemmas.\\\\
+\lem If the graph contains no negative cycles, then
+\[\opt(n, v) = \opt(n-1, v),\ \forall v \in V\]
+\proo Any path from $s$ to $v$ uses at most $n-1$ arcs $\imply$ any walk $W$ from $s$ to $v$ that uses $n$ arcs contains a cycle $C$ that has non-negative length, and therefore $\ell(W) \leq \ell(W\sm C)$. Thus there is also a shortest path $P$ from $s$ to $v$ that is also a shortest walk, hence using $n$ or more arcs won't help us. Thus $\opt(n, v) = \opt(n-1, v),\ \forall v \in V$.
+\qed\\\\
+\lem If $\opt(n, v) = \opt(n-1, v),\ \forall v \in V$, then the graph contains no cycles.\\\\
+\proo We have that $\opt(n, v) = \opt(n-1, v),\ \forall v \in V$. This implies that row $n$ of the dynamic programming table is exactly the same as row $n-1$. Since nothing has changed, if we run the algorithm further, we get $\opt(n, v) = \opt(n+1, v) = \opt(n+2, v), \dots,\ \forall v \in V$. But then no vertex $x$ can lie on a negative cycle or otherwise the length of the best walk found to $x$ must decrease. Thus, the graph contains no negative cycles.
+\qed\\\\
+Note that in proving these lemmas, we have directly proved the following theorem.\\\\
+\thm A graph contains no negative cycles iff $\opt(n, v) = \opt(n-1, v),\ \forall v \in V$. Furthermore, the graph contains a negative cycle if there exists a vertex $x \in V$ such that $\opt(n, x)\ \lt\ \opt(n-1, x).$ Moreover, we can find the negative cycle by following the predecessor arcs back from $x$.\\\\
+Therefore, the Bellman-Ford algorithm outputs either the shortest path, or a negative cycle.
+\subsubsection{Distributed Algorithms}
+Unlike Dijkstra's algorithm, the Bellman-Ford algorithm is a \ti{distributed algorithm}. This means that it can be implemented by many different processors across different machines.
+\subsubsection{Testing for Negative Cycles}
+Given a set $\mcal{P} = \{P_1, P_2, \dots, P_n\}$ of shortest paths in a graph, we have an efficient algorithm to test whether there is a negative cycle. Namely, since we're given the graph $G = (V, A)$, and we know the arc lengths, then for each vertex $v \in V$ we can calculate $d(v) = P_v$, and then for each arc $(u, v) \in A$, we can test whether $d(v) \leq d(u) + \ell_{uv}$. If the answer is yes, then there's no negative cycle, and otherwise there is one. More formally, consider the following theorem:\\\\
+\thm Given a set of paths $\mcal{P} = \{P_1, P_2, \dots, P_n\}$ with $d(v) = \ell(P_v)$, these paths are the shortest if and only if $d(s) = 0$, and $d(v) \leq d(u) + \ell_{uv}$, $\forall v \in V.$\\\\
+\proo ($\limply$) Suppose there is a path $\mcal{Q}_i$ from $s$ to $v_i$ such that $\ell(\mcal{Q}_i)\ \lt\ \ell(P_i)$. WLOG, assume $\mcal{Q}_i = \{s=v_1, v_2, \dots, v_i\}$. Thus
+\begin{align*}
+	\ell(P_i) &= d(v_i)\\
+			&\leq d(v_{i-1}) + \ell_{v_iv_{i-1}}\\
+			&\leq d(v_{i-2}) + \ell_{v_{i-2}v_{i-1}}\\
+			&\leq \dots\\
+			&\leq d(v_1) + \ell_{v_1v_2} + \dots + \ell_{v_{i-1}v_i}\\
+			&= 0 + \ell_{v_1v_2} + \dots + \ell_{v_{i-1}v_i}\\
+			&= \ell(\mcal{Q}_i)
+\end{align*}
+($\imply$) If $\mcal{P}$ contains the shortest paths, then $d(s) = 0$. Moreover, we must have $d(v) \leq d(u) + \ell_{uv}$, or else we can find shorter paths from $u$ to $v$.
+\qed
 \subsection{Sequence Alignment}
 \subsection{All-Pairs Shortest Paths}
 \subsection{Independent Set on a Tree}
